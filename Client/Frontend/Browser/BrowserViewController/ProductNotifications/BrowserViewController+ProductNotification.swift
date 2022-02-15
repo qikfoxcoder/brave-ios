@@ -77,30 +77,17 @@ extension BrowserViewController {
             return
         }
         
-        guard let onboardingList = OnboardingDisconnectList.loadFromFile() else {
-            log.error("CANNOT LOAD ONBOARDING DISCONNECT LIST")
-            return
-        }
+        let blockedRequests = selectedTab.contentBlocker.blockedRequests
         
-        var trackers = [String: [String]]()
-        let urls = selectedTab.contentBlocker.blockedRequests
-        
-        for entity in onboardingList.entities {
-            for url in urls {
-                let domain = url.baseDomain ?? url.host ?? url.schemelessAbsoluteString
-                let resources = entity.value.resources.filter({ $0 == domain })
-                
-                if !resources.isEmpty {
-                    trackers[entity.key] = resources
-                } else {
-                    trackers[domain] = [domain]
-                }
-            }
-        }
-        
-        if !trackers.isEmpty, let url = selectedTab.url {
+        if !blockedRequests.isEmpty,
+            let url = selectedTab.url,
+            let firstBlockedUrl = blockedRequests.first {
+            
             let domain = url.baseDomain ?? url.host ?? url.schemelessAbsoluteString
-            notifyTrackersBlocked(domain: domain, trackers: trackers)
+            let trackerName = BlockedTrackerParser.parse(url: firstBlockedUrl) ?? domain
+            
+            notifyTrackersBlocked(domain: domain, trackerName: trackerName,
+                                  remainingTrackersCount: blockedRequests.count - 1)
             Preferences.General.onboardingAdblockPopoverShown.value = true
         }
     }
