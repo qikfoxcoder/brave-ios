@@ -11,6 +11,7 @@ import Shared
 import BraveShared
 import BraveCore
 import SnapKit
+import SwiftUI
 
 /// The behavior for sizing sections when the user is in landscape orientation
 enum NTPLandscapeSizingBehavior {
@@ -127,7 +128,17 @@ class NewTabPageViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         
         sections = [
-            StatsSectionProvider(),
+            StatsSectionProvider(action: { [weak self] in
+                // FIXME: Temp
+                let lastWeekMostFrequentTracker = ("google-analytics", 133)
+                let lastWeekRiskiestWebsite = ("example.com", 13)
+                let allTimeMostFrequentTracker = ("scary-analytics", 678)
+                let allTimeRiskiestWebsite = ("scary.example.com", 554)
+                
+                let host = UIHostingController(rootView: PrivacyReportsView(lastWeekMostFrequentTracker: lastWeekMostFrequentTracker, lastWeekRiskiestWebsite: lastWeekRiskiestWebsite, allTimeMostFrequentTracker: allTimeMostFrequentTracker, allTimeRiskiestWebsite: allTimeRiskiestWebsite))
+                
+                self?.present(host, animated: true)
+            }),
             FavoritesSectionProvider(action: { [weak self] bookmark, action in
                 self?.handleFavoriteAction(favorite: bookmark, action: action)
             }, legacyLongPressAction: { [weak self] alertController in
