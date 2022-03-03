@@ -21,7 +21,7 @@ class StatsSectionProvider: NSObject, NTPSectionProvider {
     }
     
     func registerCells(to collectionView: UICollectionView) {
-        collectionView.register(NewTabCollectionViewCell<BraveShieldStatsView>.self)
+        collectionView.register(NewTabCenteredCollectionViewCell<BraveShieldStatsView>.self)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -29,7 +29,7 @@ class StatsSectionProvider: NSObject, NTPSectionProvider {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        return collectionView.dequeueReusableCell(for: indexPath) as NewTabCollectionViewCell<BraveShieldStatsView>
+        return collectionView.dequeueReusableCell(for: indexPath) as NewTabCenteredCollectionViewCell<BraveShieldStatsView>
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -40,16 +40,7 @@ class StatsSectionProvider: NSObject, NTPSectionProvider {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         
-        let isLandscape = collectionView.frame.width > collectionView.frame.height
-        
-        let looseInsets = UIEdgeInsets(top: 8, left: 64, bottom: 16, right: 64)
-        let compactInsets = UIEdgeInsets(top: 8, left: 16, bottom: 16, right: 16)
-        
-        if collectionView.traitCollection.horizontalSizeClass == .regular {
-            return isLandscape ? compactInsets : looseInsets
-        } else {
-            return compactInsets
-        }
+        return UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
     }
 }
 
@@ -144,6 +135,11 @@ class BraveShieldStatsView: UIView {
         
         update()
         
+        contentStackView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.width.equalTo(640)
+        }
+        
         NotificationCenter.default.addObserver(self, selector: #selector(update), name: NSNotification.Name(rawValue: BraveGlobalShieldStats.didUpdateNotification), object: nil)
     }
     
@@ -153,13 +149,6 @@ class BraveShieldStatsView: UIView {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // Dev note: attaching to superview's edge constraints did not seem to work well for some reason.
-        contentStackView.frame = self.frame
     }
     
     @objc private func update() {
