@@ -71,7 +71,7 @@ class AdBlockStats: LocalAdblockResourceProtocol {
     }
     
     func cssRules(for url: URL) -> String? {
-        generalAdblockEngine.cssRules(for: url)
+        CosmeticFiltersResourceDownloader.shared.cssRules(for: url)
     }
     
     func shouldBlock(_ request: URLRequest, currentTabUrl: URL?) -> Bool {

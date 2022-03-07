@@ -1087,6 +1087,7 @@
 		CAA0BD9026F2562D00F14212 /* PrivilegedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA0BD8F26F2562D00F14212 /* PrivilegedRequest.swift */; };
 		CAA0BDE026F4D76600F14212 /* PlaylistListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA0BDD426F4D76600F14212 /* PlaylistListViewController.swift */; };
 		CAA10597266FE94700A0372D /* RecentSearchQRCodeScannerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA1058B266FE94700A0372D /* RecentSearchQRCodeScannerController.swift */; };
+		CAAD6E9B27D64F3C0064D180 /* AdblockRustInjector.js in Resources */ = {isa = PBXBuildFile; fileRef = CAAD6E9A27D64F3C0064D180 /* AdblockRustInjector.js */; };
 		CAADEFB326E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFB226E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift */; };
 		CAADEFE026E2707F0020DC4C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFDF26E2707F0020DC4C /* SceneDelegate.swift */; };
 		CAADEFE226E2857F0020DC4C /* PlaylistCarplayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFE126E2857F0020DC4C /* PlaylistCarplayController.swift */; };
@@ -3034,6 +3035,7 @@
 		CAA0BD8F26F2562D00F14212 /* PrivilegedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivilegedRequest.swift; sourceTree = "<group>"; };
 		CAA0BDD426F4D76600F14212 /* PlaylistListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaylistListViewController.swift; sourceTree = "<group>"; };
 		CAA1058B266FE94700A0372D /* RecentSearchQRCodeScannerController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentSearchQRCodeScannerController.swift; sourceTree = "<group>"; };
+		CAAD6E9A27D64F3C0064D180 /* AdblockRustInjector.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = AdblockRustInjector.js; sourceTree = "<group>"; };
 		CAADEFB226E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPTemplateApplicationSceneDelegate.swift; sourceTree = "<group>"; };
 		CAADEFDF26E2707F0020DC4C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		CAADEFE126E2857F0020DC4C /* PlaylistCarplayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCarplayController.swift; sourceTree = "<group>"; };
@@ -5907,6 +5909,7 @@
 			children = (
 				D0C95DF9200EAE5E00E4E51C /* NoImageModeHelper.js */,
 				F9E0F38A25772E57003A6A30 /* ReaderMode.js */,
+				CAAD6E9A27D64F3C0064D180 /* AdblockRustInjector.js */,
 			);
 			path = AtDocumentStart;
 			sourceTree = "<group>";
@@ -7733,6 +7736,7 @@
 				4481F23026CBD1C600658EAC /* SFSRootCAG2.cer in Resources */,
 				4481F22E26CBD1C600658EAC /* AmazonRootCA4.cer in Resources */,
 				445CA12527997F770040F5C4 /* caline_beulin.jpg in Resources */,
+				CAAD6E9B27D64F3C0064D180 /* AdblockRustInjector.js in Resources */,
 				59C8119922D754D4005D5BBC /* BraveShared.strings in Resources */,
 				F9E0F3B4257878C1003A6A30 /* PrintHandler.js in Resources */,
 				5E824A96260BCE0D00127F36 /* MainFrameAtDocumentStart.js in Resources */,

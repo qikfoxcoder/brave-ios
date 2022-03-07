@@ -52,8 +52,10 @@ class AdblockDebugMenuTableViewController: TableViewController {
             $0.timeStyle = .short
         }
 
-        section.rows = [.init(text: "Last fetch time", detailText:
-                                dateFormatter.string(from: AdblockResourceDownloader.shared.lastFetchDate))]
+        section.rows = [.init(text: "Last fetch time (adblock)", detailText:
+                                dateFormatter.string(from: AdblockResourceDownloader.shared.lastFetchDate)),
+                        .init(text: "Last fetch time (cosmetic-filters)", detailText:
+                                                dateFormatter.string(from: CosmeticFiltersResourceDownloader.shared.lastFetchDate))]
         
         return section
     }
@@ -78,6 +80,18 @@ class AdblockDebugMenuTableViewController: TableViewController {
         if let regionalDate = Preferences.Debug.lastRegionalAdblockUpdate.value {
             regionalDateString = dateFormatter.string(from: regionalDate)
             rows.append(.init(text: "Regional blocklist", detailText: regionalDateString))
+        }
+        
+        var cosmeticFilterStylesDateString = "-"
+        if let stylesDate = Preferences.Debug.lastCosmeticFiltersCSSUpdate.value {
+            cosmeticFilterStylesDateString = dateFormatter.string(from: stylesDate)
+            rows.append(.init(text: "Cosmetic Filters (CSS)", detailText: cosmeticFilterStylesDateString))
+        }
+        
+        var cosmeticFilterScripletsDateString = "-"
+        if let scripletsDate = Preferences.Debug.lastCosmeticFiltersCSSUpdate.value {
+            cosmeticFilterScripletsDateString = dateFormatter.string(from: scripletsDate)
+            rows.append(.init(text: "Cosmetic Filters (Scriptlets)", detailText: cosmeticFilterScripletsDateString))
         }
         
         section.rows = rows
@@ -122,11 +136,9 @@ class AdblockDebugMenuTableViewController: TableViewController {
     private func downloadedListsSection(names: [String]) -> Section {
         var section = Section(header: "Downloaded lists",
                               footer: "Lists downloaded from the internet at app launch.")
-        
-        var rows = [Row]()
-        
-        func getEtag(name: String) -> String? {
-            guard let folderUrl = fm.getOrCreateFolder(name: AdblockResourceDownloader.folderName) else {
+
+        func getEtag(name: String, folder: String) -> String? {
+            guard let folderUrl = fm.getOrCreateFolder(name: folder) else {
                 return nil
             }
             let etagUrl = folderUrl.appendingPathComponent(name + ".etag")
@@ -134,14 +146,14 @@ class AdblockDebugMenuTableViewController: TableViewController {
             return String(data: data, encoding: .utf8)
         }
         
-        func getLastModified(name: String) -> String? {
+        func getLastModified(name: String, folder: String) -> String? {
             let dateFormatter = DateFormatter().then {
                 $0.dateStyle = .short
                 $0.timeStyle = .short
                 $0.timeZone = TimeZone(abbreviation: "GMT")
             }
             
-            guard let folderUrl = fm.getOrCreateFolder(name: AdblockResourceDownloader.folderName) else {
+            guard let folderUrl = fm.getOrCreateFolder(name: folder) else {
                 return nil
             }
             let etagUrl = folderUrl.appendingPathComponent(name + ".lastmodified")
@@ -154,36 +166,47 @@ class AdblockDebugMenuTableViewController: TableViewController {
             return dateFormatter.string(from: date)
         }
         
-        let folderName = AdblockResourceDownloader.folderName
-        guard let folderUrl = fm.getOrCreateFolder(name: folderName) else { return section }
-        
-        names.forEach {
-            if let data = fm.contents(atPath: folderUrl.appendingPathComponent($0 + ".json").path),
-                let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as? [[String: Any]] {
-                
-                let text = "\($0).json: \(json.count) rules"
-                let name = $0 + ".json"
-                
-                let etag = getEtag(name: name) ?? "-"
-                let lastModified = getLastModified(name: name) ?? "-"
-                
-                let detail = "\(lastModified), etag: \(etag)"
-                
-                rows.append(.init(text: text, detailText: detail, cellClass: ShrinkingSubtitleCell.self))
-            }
+        func createRows(folderName: String, names: [String]) -> [Row] {
+            guard let folderUrl = fm.getOrCreateFolder(name: folderName) else { return [] }
             
-            if fm.contents(atPath: folderUrl.appendingPathComponent($0 + ".dat").path) != nil {
-                let name = $0 + ".dat"
+            var rows = [Row]()
+            names.forEach {
+                if let data = fm.contents(atPath: folderUrl.appendingPathComponent($0 + ".json").path),
+                    let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as? [[String: Any]] {
+                    
+                    let text = "\($0).json: \(json.count) rules"
+                    let name = $0 + ".json"
+                    
+                    let etag = getEtag(name: name, folder: folderName) ?? "-"
+                    let lastModified = getLastModified(name: name, folder: folderName) ?? "-"
+                    
+                    let detail = "\(lastModified), etag: \(etag)"
+                    
+                    rows.append(.init(text: text, detailText: detail, cellClass: ShrinkingSubtitleCell.self))
+                }
                 
-                let etag = getEtag(name: name) ?? "-"
-                let lastModified = getLastModified(name: name) ?? "-"
-                
-                let detail = "\(lastModified), etag: \(etag)"
-                
-                rows.append(.init(text: $0 + ".dat", detailText: detail, cellClass: ShrinkingSubtitleCell.self))
+                if fm.contents(atPath: folderUrl.appendingPathComponent($0 + ".dat").path) != nil {
+                    let name = $0 + ".dat"
+                    
+                    let etag = getEtag(name: name, folder: folderName) ?? "-"
+                    let lastModified = getLastModified(name: name, folder: folderName) ?? "-"
+                    
+                    let detail = "\(lastModified), etag: \(etag)"
+                    
+                    rows.append(.init(text: $0 + ".dat", detailText: detail, cellClass: ShrinkingSubtitleCell.self))
+                }
             }
+            return rows
         }
         
+        let costmeticFilterNames = [
+            CosmeticFiltersResourceDownloader.CosmeticFilterType.cosmeticSample.identifier,
+            CosmeticFiltersResourceDownloader.CosmeticFilterType.resourceSample.identifier
+        ]
+        
+        var rows = [Row]()
+        rows.append(contentsOf: createRows(folderName: AdblockResourceDownloader.folderName, names: names))
+        rows.append(contentsOf: createRows(folderName: CosmeticFiltersResourceDownloader.folderName, names: costmeticFilterNames))
         section.rows = rows
         return section
     }

@@ -47,7 +47,8 @@ public class AdblockRustEngine {
     return didMatchRule
   }
   
-  @discardableResult public func set(data: Data) -> Bool {
+  @discardableResult
+  public func set(data: Data) -> Bool {
     // Extra safety check to prevent race condition in case engine deserialization
     // is called from another thread than `shouldBlock` invocation(#2699).
     deserializationPending = true
@@ -57,6 +58,14 @@ public class AdblockRustEngine {
     
     deserializationPending = false
     return status
+  }
+    
+  public func set(json: Data) {
+    // Extra safety check to prevent race condition in case engine deserialization
+    // is called from another thread than `shouldBlock` invocation(#2699).
+    deserializationPending = true
+    engine_add_resources(engine, json.int8Array)
+    deserializationPending = false
   }
     
   func cssRules(for url: URL) -> String? {

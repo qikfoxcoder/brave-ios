@@ -23,12 +23,12 @@ class CosmeticFiltersResourceDownloader {
     static let folderName = "cmf-data"
     private let servicesKeyName = "SERVICES_KEY"
     private let servicesKeyHeaderValue = "BraveServiceKey"
+    private var engine = AdblockRustEngine()
     
     static let endpoint = "https://raw.githubusercontent.com/iccub/brave-ios/development"
     
     private init(networkManager: NetworkManager = NetworkManager()) {
         self.networkManager = networkManager
-        Preferences.Shields.useRegionAdBlock.observe(from: self)
     }
     
     /// Initialized with year 1970 to force adblock fetch at first launch.
@@ -41,29 +41,62 @@ class CosmeticFiltersResourceDownloader {
         if now.timeIntervalSince(lastFetchDate) >= fetchInterval {
             lastFetchDate = now
             
-            self.downloadCosmeticSamples()
-            self.downloadResourceSamples()
+            // MUST re-create the engine otherwise we get insane load times when calling:
+            // `engine_add_resources`
+            // This is because `engine_add_resources` will ADD resources, and not delete old ones
+            // Thus we get a huge amount of memory usage and slow down.
+            engine = AdblockRustEngine()
+            
+            loadDownloadedFiles()
+            downloadCosmeticSamples()
+            downloadResourceSamples()
+        }
+    }
+    
+    func cssRules(for url: URL) -> String? {
+        engine.cssRules(for: url)
+    }
+    
+    private func loadDownloadedFiles() {
+        let fm = FileManager.default
+        guard let folderUrl = fm.getOrCreateFolder(name: CosmeticFiltersResourceDownloader.folderName) else {
+            log.error("Could not get directory with .dat and .json files")
+            return
+        }
+        
+        let enumerator = fm.enumerator(at: folderUrl, includingPropertiesForKeys: nil)
+        let filePaths = enumerator?.allObjects as? [URL]
+        let datFileUrls = filePaths?.filter { $0.pathExtension == "dat" }
+        let jsonFileUrls = filePaths?.filter { $0.pathExtension == "json" }
+        
+        datFileUrls?.forEach {
+            let fileName = $0.deletingPathExtension().lastPathComponent
+            if let data = fm.contents(atPath: $0.path) {
+                setDataFile(data: data, id: fileName)
+            }
+        }
+        
+        jsonFileUrls?.forEach {
+            let fileName = $0.deletingPathExtension().lastPathComponent
+            if let data = fm.contents(atPath: $0.path) {
+                setJSONFile(data: data, id: fileName)
+            }
         }
     }
     
     private func downloadCosmeticSamples() {
-        if !Preferences.Shields.useRegionAdBlock.value {
-            log.debug("Regional adblocking disabled, aborting attempt to download regional resources")
-            return
-        }
-        
         downloadResources(type: .cosmeticSample,
-                          queueName: "Cosmetic Sample Queue").uponQueue(.main) {
-            log.debug("Downloaded Cosmetic Samples")
-            Preferences.Debug.lastRegionalAdblockUpdate.value = Date()
+                          queueName: "CSS Queue").uponQueue(.main) {
+            log.debug("Downloaded Cosmetic Filters CSS Samples")
+            Preferences.Debug.lastCosmeticFiltersCSSUpdate.value = Date()
         }
     }
     
     private func downloadResourceSamples() {
         downloadResources(type: .resourceSample,
-                          queueName: "Resource Sample Queue").uponQueue(.main) {
-            log.debug("Downloaded Resource Samples")
-            Preferences.Debug.lastGeneralAdblockUpdate.value = Date()
+                          queueName: "Scriplets Queue").uponQueue(.main) {
+            log.debug("Downloaded Cosmetic Filters Scriptlets Samples")
+            Preferences.Debug.lastCosmeticFiltersScripletsUpdate.value = Date()
         }
     }
     
@@ -72,7 +105,7 @@ class CosmeticFiltersResourceDownloader {
 
         let queue = DispatchQueue(label: queueName)
         let nm = networkManager
-        let folderName = AdblockResourceDownloader.folderName
+        let folderName = CosmeticFiltersResourceDownloader.folderName
         
         // file name of which the file will be saved on disk
         let fileName = type.identifier
@@ -82,7 +115,7 @@ class CosmeticFiltersResourceDownloader {
             let etagExtension = fileExtension + ".etag"
             
             guard let resourceName = type.resourceName(for: fileType),
-                var url = URL(string: AdblockResourceDownloader.endpoint) else {
+                var url = URL(string: CosmeticFiltersResourceDownloader.endpoint) else {
                 return Deferred<CosmeticFilterNetworkResource>()
             }
             
@@ -123,9 +156,7 @@ class CosmeticFiltersResourceDownloader {
         }
         
         let fileUrl = folderUrl.appendingPathComponent(name)
-        
         guard let data = FileManager.default.contents(atPath: fileUrl.path) else { return nil }
-        
         return String(data: data, encoding: .utf8)
     }
     
@@ -134,7 +165,7 @@ class CosmeticFiltersResourceDownloader {
                                   queue: DispatchQueue) -> Bool {
         var fileSaveCompletions = [Bool]()
         let fm = FileManager.default
-        let folderName = AdblockResourceDownloader.folderName
+        let folderName = CosmeticFiltersResourceDownloader.folderName
         
         resources.forEach {
             let fileName = name + ".\($0.fileType.rawValue)"
@@ -167,27 +198,50 @@ class CosmeticFiltersResourceDownloader {
         resources.forEach {
             switch $0.fileType {
             case .dat:
-                resourceSetup.append(AdBlockStats.shared.setDataFile(data: $0.resource.data,
-                                                                     id: $0.type.identifier))
+                resourceSetup.append(setDataFile(data: $0.resource.data,
+                                                 id: $0.type.identifier))
+                break
             case .json:
-                if compileJsonRules {
-                    resourceSetup.append(compileContentBlocker(resources: resources, queue: queue))
-                }
+                resourceSetup.append(setJSONFile(data: $0.resource.data,
+                                                 id: $0.type.identifier))
+                break
             case .tgz:
-                break // TODO: Add downloadable httpse list
+                break
             }
         }
         all(resourceSetup).uponQueue(queue) { _ in completion.fill(()) }
         return completion
     }
-}
-
-extension CosmeticFiltersResourceDownloader: PreferencesObserver {
-    func preferencesDidChange(for key: String) {
-        let regionalAdblockPref = Preferences.Shields.useRegionAdBlock
-        if key == regionalAdblockPref.key {
-            regionalAdblockResourcesSetup()
+    
+    @discardableResult
+    private func setDataFile(data: Data, id: String) -> Deferred<()> {
+        let completion = Deferred<()>()
+        
+        AdBlockStats.adblockSerialQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.engine.set(data: data) {
+                log.debug("Cosmetic-Filters file with id: \(id) deserialized successfully")
+                completion.fill(())
+            } else {
+                log.error("Failed to deserialize adblock list with id: \(id)")
+            }
         }
+        
+        return completion
+    }
+    
+    @discardableResult
+    private func setJSONFile(data: Data, id: String) -> Deferred<()> {
+        let completion = Deferred<()>()
+        
+        AdBlockStats.adblockSerialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.engine.set(json: data)
+            log.debug("Cosmetic-Filters file with id: \(id) deserialized successfully")
+            completion.fill(())
+        }
+        
+        return completion
     }
 }
 
@@ -199,7 +253,7 @@ extension CosmeticFiltersResourceDownloader {
         var identifier: String {
             switch self {
             case .cosmeticSample: return "cosmetic_sample"
-            case .resourceSample: return "resource_sample"
+            case .resourceSample: return "resources_sample"
             }
         }
         

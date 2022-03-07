@@ -483,18 +483,23 @@ extension BrowserViewController: WKNavigationDelegate {
             tabsBar.reloadDataAndRestoreSelectedTab()
         }
         
+        // Cosmetic Filters
+        if let url = webView.url,
+           !InternalURL.isValid(url: url),
+           !(InternalURL(url)?.isSessionRestore ?? false),
+           Domain.getOrCreate(forUrl: url,
+                              persistent: !PrivateBrowsingManager.shared.isPrivateBrowsing)
+            .isShieldExpected(.AdblockAndTp, considerAllShieldsOption: true),
+           let rules = AdBlockStats.shared.cssRules(for: url) {
+
+            webView.evaluateSafeJavaScript(functionName: "window.__firefox__.AdblockRustInjector.applyFilter", args: [rules.toBase64()], contentWorld: .defaultClient, asFunction: true) { _, error in
+                log.error("AdblockRustInjector error: \(String(describing: error))")
+            }
+        }
+        
         // Added this method to determine long press menu actions better
         // Since these actions are depending on tabmanager opened WebsiteCount
         updateToolbarUsingTabManager(tabManager)
-        
-        if let url = webView.url,
-           !(InternalURL(url)?.isSessionRestore ?? false),
-           let rules = AdBlockStats.shared.cssRules(for: url) {
-            webView.evaluateSafeJavaScript(functionName: "window.__firefox__.AdblockRustInjector.inject", args: [rules.toBase64()] contentWorld: .page) {
-                
-                log.warning("AdblockRustInjector error: \(String(describing: error))")
-            }
-        }
     }
     
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
