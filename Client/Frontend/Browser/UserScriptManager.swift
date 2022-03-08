@@ -5,6 +5,7 @@
 import WebKit
 import Shared
 import Data
+import BraveCore
 
 private let log = Logger.browserLogger
 
@@ -323,6 +324,17 @@ class UserScriptManager {
                             forMainFrameOnly: false,
                             in: .page)
     }()
+    
+    private let walletProviderScript: WKUserScript? = {
+        guard let path = Bundle.main.path(forResource: "WalletProvider", ofType: "js"),
+              let source = try? String(contentsOfFile: path) else {
+            return nil
+        }
+        return WKUserScript(source: source,
+                                   injectionTime: .atDocumentStart,
+                                   forMainFrameOnly: true,
+                                   in: .page)
+    }()
 
     private func reloadUserScripts() {
         tab?.webView?.configuration.userContentController.do {
@@ -361,6 +373,10 @@ class UserScriptManager {
             }
             
             if let domainUserScript = domainUserScript, let script = domainUserScript.script {
+                $0.addUserScript(script)
+            }
+            
+            if let script = walletProviderScript {
                 $0.addUserScript(script)
             }
         }

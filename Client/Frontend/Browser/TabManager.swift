@@ -10,6 +10,7 @@ import BraveShared
 import XCGLogger
 import Data
 import CoreData
+import BraveCore
 
 private let log = Logger.browserLogger
 private let rewardsLog = Logger.braveCoreLogger
@@ -81,6 +82,7 @@ class TabManager: NSObject {
     var selectedIndex: Int { return _selectedIndex }
     var tempTabs: [Tab]?
     private weak var rewards: BraveRewards?
+    var makeWalletProvider: ((Tab) -> BraveWalletBraveWalletProvider?)?
 
     init(prefs: Prefs, imageStore: DiskImageStore?, rewards: BraveRewards?) {
         assert(Thread.isMainThread)
@@ -440,6 +442,8 @@ class TabManager: NSObject {
         } else {
             tab.id = id ?? TabMO.create()
         }
+        
+        tab.walletProvider = makeWalletProvider?(tab)
         
         delegates.forEach { $0.get()?.tabManager(self, willAddTab: tab) }
 
