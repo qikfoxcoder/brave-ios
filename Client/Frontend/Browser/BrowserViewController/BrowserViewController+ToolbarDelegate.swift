@@ -52,7 +52,7 @@ extension BrowserViewController: TopToolbarDelegate {
         // TODO: Instead of showing only the first cert in the chain,
         // have a UI that allows users to select any certificate in the chain (similar to Desktop browsers)
         if let serverCertificate = serverCertificates.first,
-           let certificate = BraveCertificate(certificate: serverCertificate) {
+           let certificate = BraveCertificateModel(certificate: serverCertificate) {
             let certificateViewController = CertificateViewController(certificate: certificate)
             
             let popover = PopoverController(contentController: certificateViewController, contentSizeBehavior: .preferredContentSize)

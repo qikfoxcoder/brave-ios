@@ -1047,6 +1047,8 @@
 		CA2202B027194D26002D3582 /* InterstitialPageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2202AF27194D26002D3582 /* InterstitialPageHandler.swift */; };
 		CA2202B227199123002D3582 /* DarkWarning.svg in Resources */ = {isa = PBXBuildFile; fileRef = CA2202B127199123002D3582 /* DarkWarning.svg */; };
 		CA2202B4271993BD002D3582 /* CertificateError.css in Resources */ = {isa = PBXBuildFile; fileRef = CA2202B3271993BD002D3582 /* CertificateError.css */; };
+		CA220B3727D7F8A300AB67CA /* BraveCertificateModel+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA220B3627D7F8A300AB67CA /* BraveCertificateModel+Extension.swift */; };
+		CA220B4327D7F8D700AB67CA /* BraveCertificateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA220B4227D7F8D700AB67CA /* BraveCertificateUtils.swift */; };
 		CA225DF22795CECE0024C104 /* MainFrame.js in Resources */ = {isa = PBXBuildFile; fileRef = CA225DF12795CECE0024C104 /* MainFrame.js */; };
 		CA225DF32795D0600024C104 /* __firefox__.js in Resources */ = {isa = PBXBuildFile; fileRef = F9E0F3BE25787E2C003A6A30 /* __firefox__.js */; };
 		CA225DF62795D1A80024C104 /* MainFrameAtDocumentStartSandboxed.js in Resources */ = {isa = PBXBuildFile; fileRef = CA225DF42795D1A70024C104 /* MainFrameAtDocumentStartSandboxed.js */; };
@@ -1088,10 +1090,10 @@
 		CAA0BD9026F2562D00F14212 /* PrivilegedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA0BD8F26F2562D00F14212 /* PrivilegedRequest.swift */; };
 		CAA0BDE026F4D76600F14212 /* PlaylistListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA0BDD426F4D76600F14212 /* PlaylistListViewController.swift */; };
 		CAA10597266FE94700A0372D /* RecentSearchQRCodeScannerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA1058B266FE94700A0372D /* RecentSearchQRCodeScannerController.swift */; };
+		CAA7DC6A26332C5900E3910E /* CertificateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA7DC6926332C5900E3910E /* CertificateViewController.swift */; };
 		CAADEFB326E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFB226E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift */; };
 		CAADEFE026E2707F0020DC4C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFDF26E2707F0020DC4C /* SceneDelegate.swift */; };
 		CAADEFE226E2857F0020DC4C /* PlaylistCarplayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADEFE126E2857F0020DC4C /* PlaylistCarplayController.swift */; };
-		CAA7DC6A26332C5900E3910E /* CertificateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA7DC6926332C5900E3910E /* CertificateViewController.swift */; };
 		CAB127632639F37C00BBFC75 /* RecentSearches.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB127622639F37C00BBFC75 /* RecentSearches.swift */; };
 		CAB127652639FB7000BBFC75 /* RecentSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB127642639FB7000BBFC75 /* RecentSearchCell.swift */; };
 		CAB54B8626A5BFA800F08BF3 /* PlaylistURLBarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB54B8526A5BFA800F08BF3 /* PlaylistURLBarButton.swift */; };
@@ -2997,6 +2999,8 @@
 		CA2202AF27194D26002D3582 /* InterstitialPageHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterstitialPageHandler.swift; sourceTree = "<group>"; };
 		CA2202B127199123002D3582 /* DarkWarning.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = DarkWarning.svg; sourceTree = "<group>"; };
 		CA2202B3271993BD002D3582 /* CertificateError.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = CertificateError.css; sourceTree = "<group>"; };
+		CA220B3627D7F8A300AB67CA /* BraveCertificateModel+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BraveCertificateModel+Extension.swift"; sourceTree = "<group>"; };
+		CA220B4227D7F8D700AB67CA /* BraveCertificateUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraveCertificateUtils.swift; sourceTree = "<group>"; };
 		CA225DEF2795CDFD0024C104 /* __firefox__.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = __firefox__.js; sourceTree = "<group>"; };
 		CA225DF12795CECE0024C104 /* MainFrame.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = MainFrame.js; sourceTree = "<group>"; };
 		CA225DF42795D1A70024C104 /* MainFrameAtDocumentStartSandboxed.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = MainFrameAtDocumentStartSandboxed.js; sourceTree = "<group>"; };
@@ -3037,10 +3041,10 @@
 		CAA0BD8F26F2562D00F14212 /* PrivilegedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivilegedRequest.swift; sourceTree = "<group>"; };
 		CAA0BDD426F4D76600F14212 /* PlaylistListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaylistListViewController.swift; sourceTree = "<group>"; };
 		CAA1058B266FE94700A0372D /* RecentSearchQRCodeScannerController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentSearchQRCodeScannerController.swift; sourceTree = "<group>"; };
+		CAA7DC6926332C5900E3910E /* CertificateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateViewController.swift; sourceTree = "<group>"; };
 		CAADEFB226E26A9D0020DC4C /* CPTemplateApplicationSceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPTemplateApplicationSceneDelegate.swift; sourceTree = "<group>"; };
 		CAADEFDF26E2707F0020DC4C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		CAADEFE126E2857F0020DC4C /* PlaylistCarplayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCarplayController.swift; sourceTree = "<group>"; };
-		CAA7DC6926332C5900E3910E /* CertificateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateViewController.swift; sourceTree = "<group>"; };
 		CAB127622639F37C00BBFC75 /* RecentSearches.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearches.swift; sourceTree = "<group>"; };
 		CAB127642639FB7000BBFC75 /* RecentSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchCell.swift; sourceTree = "<group>"; };
 		CAB54B8526A5BFA800F08BF3 /* PlaylistURLBarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistURLBarButton.swift; sourceTree = "<group>"; };
@@ -5976,6 +5980,8 @@
 			isa = PBXGroup;
 			children = (
 				CAA7DC6926332C5900E3910E /* CertificateViewController.swift */,
+				CA220B3627D7F8A300AB67CA /* BraveCertificateModel+Extension.swift */,
+				CA220B4227D7F8D700AB67CA /* BraveCertificateUtils.swift */,
 			);
 			path = "Certificate Viewer";
 			sourceTree = "<group>";
@@ -8329,6 +8335,7 @@
 				27F94A3A21909A5900F4FADF /* SearchSuggestionsPromptView.swift in Sources */,
 				CA225DF92795D7690024C104 /* WKContentWorld+Sandbox.swift in Sources */,
 				5E096174252B63A300F3AFBB /* BraveCoreMigrator.swift in Sources */,
+				CA220B3727D7F8A300AB67CA /* BraveCertificateModel+Extension.swift in Sources */,
 				C690C208212FF35100E6EEE9 /* WebImageCacheWithNoPrivacyProtectionManager.swift in Sources */,
 				27C647772550AE16006D72FC /* WalletTransferCompleteViewController.swift in Sources */,
 				278C700A24F96D7000A246C8 /* BraveShieldsAndPrivacySettingsController.swift in Sources */,
@@ -8429,6 +8436,7 @@
 				C615FAED212ACAD200A8168C /* BraveWebView.swift in Sources */,
 				C817B34D1FC609500086018E /* UIScrollViewSwizzled.swift in Sources */,
 				0A55E53A2434EEB60069F06A /* EnableVPNPopupViewController.swift in Sources */,
+				CA220B4327D7F8D700AB67CA /* BraveCertificateUtils.swift in Sources */,
 				4422D4E221BFFB7600BF1855 /* format.cc in Sources */,
 				CA9A233426B97B4300923D70 /* PlaylistMenuButton.swift in Sources */,
 				39F819C61FD70F5D009E31E4 /* TabEventHandlers.swift in Sources */,
