@@ -88,8 +88,8 @@ class TPStatsBlocklistChecker {
             if isAdOrTrackerListEnabled && AdBlockStats.shared.shouldBlock(request,
                                                                            currentTabUrl: currentTabUrl) {
                 
-                if let dom = URL(string: domainUrl) {
-                    BlockedResource.create(url: url, domain: dom, resourceType: .ad)
+                if let dom = URL(string: domainUrl)?.baseDomain, let blockedResourceHost = url.baseDomain {
+                    BlockedResource.create(host: blockedResourceHost, domain: dom, resourceType: .ad)
                 }
                 
                 completion(BlocklistName.ad)
