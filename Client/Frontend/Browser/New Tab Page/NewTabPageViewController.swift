@@ -129,28 +129,27 @@ class NewTabPageViewController: UIViewController {
         
         sections = [
             StatsSectionProvider(action: { [weak self] in
-                // FIXME: Temp
-                let lastWeekMostFrequentTracker = ("google-analytics", 133)
-                let lastWeekRiskiestWebsite = ("example.com", 13)
-                let allTimeMostFrequentTracker = ("scary-analytics", 678)
-                let allTimeRiskiestWebsite = ("scary.example.com", 554)
                 
                 DispatchQueue.main.async {
                     let lastWeekMostFrequentTracker = BlockedResource.mostBlockedTracker(inLastDays: 7)
-                    print(lastWeekMostFrequentTracker)
+                    let allTimeMostFrequentTracker = BlockedResource.mostBlockedTracker(inLastDays: nil)
+                    
+                    let lastWeekRiskiestWebsite = BlockedResource.riskiestWebsite(inLastDays: 7)
+                    let allTimeRiskiestWebsite = BlockedResource.riskiestWebsite(inLastDays: nil)
+                    
+                    
+                    let view = PrivacyReportsView(lastWeekMostFrequentTracker: lastWeekMostFrequentTracker,
+                                                  lastWeekRiskiestWebsite: lastWeekRiskiestWebsite,
+                                                  allTimeMostFrequentTracker: allTimeMostFrequentTracker,
+                                                  allTimeRiskiestWebsite: allTimeRiskiestWebsite)
+                    
+                    let host = UIHostingController(rootView: view)
+                    host.rootView.onDismiss = { [weak host] in
+                        host?.dismiss(animated: true)
+                    }
+                    
+                    self?.present(host, animated: true)
                 }
-                
-                let view = PrivacyReportsView(lastWeekMostFrequentTracker: lastWeekMostFrequentTracker,
-                                              lastWeekRiskiestWebsite: lastWeekRiskiestWebsite,
-                                              allTimeMostFrequentTracker: allTimeMostFrequentTracker,
-                                              allTimeRiskiestWebsite: allTimeRiskiestWebsite)
-                
-                let host = UIHostingController(rootView: view)
-                host.rootView.onDismiss = { [weak host] in
-                    host?.dismiss(animated: true)
-                }
-                
-                self?.present(host, animated: true)
             }),
             FavoritesSectionProvider(action: { [weak self] bookmark, action in
                 self?.handleFavoriteAction(favorite: bookmark, action: action)
