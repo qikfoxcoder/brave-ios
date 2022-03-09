@@ -199,14 +199,14 @@ class AdblockDebugMenuTableViewController: TableViewController {
             return rows
         }
         
-        let costmeticFilterNames = [
+        let cosmeticFilterNames = [
             CosmeticFiltersResourceDownloader.CosmeticFilterType.cosmeticSample.identifier,
             CosmeticFiltersResourceDownloader.CosmeticFilterType.resourceSample.identifier
         ]
         
         var rows = [Row]()
         rows.append(contentsOf: createRows(folderName: AdblockResourceDownloader.folderName, names: names))
-        rows.append(contentsOf: createRows(folderName: CosmeticFiltersResourceDownloader.folderName, names: costmeticFilterNames))
+        rows.append(contentsOf: createRows(folderName: CosmeticFiltersResourceDownloader.folderName, names: cosmeticFilterNames))
         section.rows = rows
         return section
     }

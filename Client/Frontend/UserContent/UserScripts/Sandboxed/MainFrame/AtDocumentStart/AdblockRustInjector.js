@@ -32,14 +32,12 @@ Object.defineProperty(window.__firefox__.AdblockRustInjector, "applyFilter", {
       }
       
       for (const [key, value] of Object.entries(style_selectors)) {
-          const value = entry.value;
-          
           var subRules = "";
           for (const subRule of value) {
               subRules += subRule + ";"
           }
           
-          rules += key + "{" + subRules + "}"
+          rules += key + "{" + subRules + " !important}"
       };
 
       if (style.styleSheet) {

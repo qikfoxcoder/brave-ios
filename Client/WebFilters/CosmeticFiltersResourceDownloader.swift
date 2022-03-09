@@ -16,6 +16,7 @@ private struct CosmeticFilterNetworkResource {
 }
 
 class CosmeticFiltersResourceDownloader {
+    private static let queue = DispatchQueue(label: "com.brave.cosmecitc-filters-dispatch-queue")
     static let shared = CosmeticFiltersResourceDownloader()
     
     private let networkManager: NetworkManager
@@ -24,6 +25,7 @@ class CosmeticFiltersResourceDownloader {
     private let servicesKeyName = "SERVICES_KEY"
     private let servicesKeyHeaderValue = "BraveServiceKey"
     private var engine = AdblockRustEngine()
+    private var didInitialLoad = false
     
     static let endpoint = "https://raw.githubusercontent.com/iccub/brave-ios/development"
     
@@ -41,15 +43,51 @@ class CosmeticFiltersResourceDownloader {
         if now.timeIntervalSince(lastFetchDate) >= fetchInterval {
             lastFetchDate = now
             
-            // MUST re-create the engine otherwise we get insane load times when calling:
-            // `engine_add_resources`
-            // This is because `engine_add_resources` will ADD resources, and not delete old ones
-            // Thus we get a huge amount of memory usage and slow down.
-            engine = AdblockRustEngine()
+            if !didInitialLoad {
+                Task.detached(priority: .userInitiated) { [weak self] in
+                    guard let self = self else { return }
+                    
+                    // Load files from disk into the original engine engine
+                    do {
+                        try await self.loadDownloadedFiles(into: self.engine)
+                        self.didInitialLoad = true
+                    } catch {
+                        log.error("Error Loading Cosmetic-Filters: \(error)")
+                    }
+                }
+            }
             
-            loadDownloadedFiles()
-            downloadCosmeticSamples()
-            downloadResourceSamples()
+            Task.detached(priority: .userInitiated) { [weak self] in
+                guard let self = self else { return }
+                
+                // All operations must be done on a new engine,
+                // otherwise we get insane load times when calling:
+                // `engine_add_resources` on an existing engine
+                // This is because `engine_add_resources` will ADD resources, and not delete old ones
+                // Thus we get a huge amount of memory usage and slow down.
+                let newEngine = AdblockRustEngine()
+                
+                // Load downloaded files into the new engine
+                do {
+                    try await self.loadDownloadedFiles(into: newEngine)
+                } catch {
+                    log.error("Error Loading Cosmetic-Filters: \(error)")
+                }
+                
+                do {
+                    try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+                        guard let self = self else { return }
+                        group.addTask { try await self.downloadCosmeticSamples(with: newEngine) }
+                        group.addTask { try await self.downloadResourceSamples(with: newEngine) }
+                        try await group.waitForAll()
+                    }
+                    
+                    // Once the new engine is setup, we can replace the old engine with the new one.
+                    self.engine = newEngine
+                } catch {
+                    log.error("Failed to Download Cosmetic-Filters: \(error)")
+                }
+            }
         }
     }
     
@@ -57,7 +95,7 @@ class CosmeticFiltersResourceDownloader {
         engine.cssRules(for: url)
     }
     
-    private func loadDownloadedFiles() {
+    private func loadDownloadedFiles(into engine: AdblockRustEngine) async throws {
         let fm = FileManager.default
         guard let folderUrl = fm.getOrCreateFolder(name: CosmeticFiltersResourceDownloader.folderName) else {
             log.error("Could not get directory with .dat and .json files")
@@ -69,40 +107,42 @@ class CosmeticFiltersResourceDownloader {
         let datFileUrls = filePaths?.filter { $0.pathExtension == "dat" }
         let jsonFileUrls = filePaths?.filter { $0.pathExtension == "json" }
         
-        datFileUrls?.forEach {
+        try await datFileUrls?.asyncForEach({
             let fileName = $0.deletingPathExtension().lastPathComponent
             if let data = fm.contents(atPath: $0.path) {
-                setDataFile(data: data, id: fileName)
+                try await self.setDataFile(into: engine, data: data, id: fileName)
             }
-        }
+        })
         
-        jsonFileUrls?.forEach {
+        try await jsonFileUrls?.asyncForEach {
             let fileName = $0.deletingPathExtension().lastPathComponent
             if let data = fm.contents(atPath: $0.path) {
-                setJSONFile(data: data, id: fileName)
+                try await self.setJSONFile(into: engine, data: data, id: fileName)
             }
         }
     }
     
-    private func downloadCosmeticSamples() {
-        downloadResources(type: .cosmeticSample,
-                          queueName: "CSS Queue").uponQueue(.main) {
-            log.debug("Downloaded Cosmetic Filters CSS Samples")
+    private func downloadCosmeticSamples(with engine: AdblockRustEngine) async throws {
+        try await downloadResources(for: engine, type: .cosmeticSample, queueName: "CSS-Queue")
+        log.debug("Downloaded Cosmetic Filters CSS Samples")
+        
+        await MainActor.run {
             Preferences.Debug.lastCosmeticFiltersCSSUpdate.value = Date()
         }
     }
     
-    private func downloadResourceSamples() {
-        downloadResources(type: .resourceSample,
-                          queueName: "Scriplets Queue").uponQueue(.main) {
-            log.debug("Downloaded Cosmetic Filters Scriptlets Samples")
+    private func downloadResourceSamples(with engine: AdblockRustEngine) async throws {
+        try await downloadResources(for: engine, type: .resourceSample, queueName: "Scriplets-Queue")
+        log.debug("Downloaded Cosmetic Filters Scriptlets Samples")
+        
+        await MainActor.run {
             Preferences.Debug.lastCosmeticFiltersScripletsUpdate.value = Date()
         }
     }
     
-    private func downloadResources(type: CosmeticFilterType, queueName: String) -> Deferred<()> {
-        let completion = Deferred<()>()
-
+    private func downloadResources(for engine: AdblockRustEngine,
+                                   type: CosmeticFilterType,
+                                   queueName: String) async throws {
         let queue = DispatchQueue(label: queueName)
         let nm = networkManager
         let folderName = CosmeticFiltersResourceDownloader.folderName
@@ -110,13 +150,13 @@ class CosmeticFiltersResourceDownloader {
         // file name of which the file will be saved on disk
         let fileName = type.identifier
         
-        let completedDownloads = type.associatedFiles.map { fileType -> Deferred<CosmeticFilterNetworkResource> in
+        async let completedDownloads = type.associatedFiles.asyncCompactMap { fileType -> CosmeticFilterNetworkResource? in
             let fileExtension = fileType.rawValue
             let etagExtension = fileExtension + ".etag"
             
             guard let resourceName = type.resourceName(for: fileType),
                 var url = URL(string: CosmeticFiltersResourceDownloader.endpoint) else {
-                return Deferred<CosmeticFilterNetworkResource>()
+                return nil
             }
             
             url.appendPathComponent(resourceName)
@@ -128,25 +168,22 @@ class CosmeticFiltersResourceDownloader {
             }
             
             let etag = fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
-            let request =
-            nm.downloadResource(with: url, resourceType: .cached(etag: etag),
-                                checkLastServerSideModification: !AppConstants.buildChannel.isPublic,
-                                customHeaders: headers)
-                .mapQueue(queue) { resource in
-                    CosmeticFilterNetworkResource(resource: resource, fileType: fileType, type: type)
-                }
             
-            return request
-        }
-        
-        all(completedDownloads).uponQueue(queue) { resources in
-            if self.writeFilesTodisk(resources: resources, name: fileName, queue: queue) {
-                self.setUpFiles(resources: resources, compileJsonRules: false, queue: queue)
-                    .uponQueue(queue) { completion.fill(()) }
+            return await withCheckedContinuation { continuation in
+                nm.downloadResource(with: url, resourceType: .cached(etag: etag),
+                                    checkLastServerSideModification: !AppConstants.buildChannel.isPublic,
+                                    customHeaders: headers)
+                    .uponQueue(queue) {
+                        continuation.resume(with: .success(CosmeticFilterNetworkResource(resource: $0,
+                                                                                         fileType: fileType,
+                                                                                         type: type)))
+                    }
             }
         }
         
-        return completion
+        if await self.writeFilesToDisk(resources: completedDownloads, name: fileName) {
+            try await self.setUpFiles(into: engine, resources: completedDownloads)
+        }
     }
     
     private func fileFromDocumentsAsString(_ name: String, inFolder folder: String) -> String? {
@@ -160,9 +197,7 @@ class CosmeticFiltersResourceDownloader {
         return String(data: data, encoding: .utf8)
     }
     
-    private func writeFilesTodisk(resources: [CosmeticFilterNetworkResource],
-                                  name: String,
-                                  queue: DispatchQueue) -> Bool {
+    private func writeFilesToDisk(resources: [CosmeticFilterNetworkResource], name: String) async -> Bool {
         var fileSaveCompletions = [Bool]()
         let fm = FileManager.default
         let folderName = CosmeticFiltersResourceDownloader.folderName
@@ -191,57 +226,43 @@ class CosmeticFiltersResourceDownloader {
         return !fileSaveCompletions.contains(false)
     }
     
-    private func setUpFiles(resources: [CosmeticFilterNetworkResource], compileJsonRules: Bool, queue: DispatchQueue) -> Deferred<()> {
-        let completion = Deferred<()>()
-        var resourceSetup = [Deferred<()>]()
-        
-        resources.forEach {
+    private func setUpFiles(into engine: AdblockRustEngine,
+                            resources: [CosmeticFilterNetworkResource]) async throws {
+        try await resources.asyncConcurrentForEach {
             switch $0.fileType {
             case .dat:
-                resourceSetup.append(setDataFile(data: $0.resource.data,
-                                                 id: $0.type.identifier))
-                break
+                try await self.setDataFile(into: engine,
+                                           data: $0.resource.data,
+                                           id: $0.type.identifier)
             case .json:
-                resourceSetup.append(setJSONFile(data: $0.resource.data,
-                                                 id: $0.type.identifier))
-                break
+                try await self.setJSONFile(into: engine,
+                                           data: $0.resource.data,
+                                           id: $0.type.identifier)
             case .tgz:
                 break
             }
         }
-        all(resourceSetup).uponQueue(queue) { _ in completion.fill(()) }
-        return completion
     }
     
-    @discardableResult
-    private func setDataFile(data: Data, id: String) -> Deferred<()> {
-        let completion = Deferred<()>()
-        
-        AdBlockStats.adblockSerialQueue.async { [weak self] in
-            guard let self = self else { return }
-            if self.engine.set(data: data) {
-                log.debug("Cosmetic-Filters file with id: \(id) deserialized successfully")
-                completion.fill(())
-            } else {
-                log.error("Failed to deserialize adblock list with id: \(id)")
+    private func setDataFile(into engine: AdblockRustEngine, data: Data, id: String) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            CosmeticFiltersResourceDownloader.queue.async {
+                if engine.set(data: data) {
+                    continuation.resume()
+                } else {
+                    continuation.resume(with: .failure("Failed to deserialize adblock list with id: \(id)"))
+                }
             }
         }
-        
-        return completion
     }
     
-    @discardableResult
-    private func setJSONFile(data: Data, id: String) -> Deferred<()> {
-        let completion = Deferred<()>()
-        
-        AdBlockStats.adblockSerialQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.engine.set(json: data)
-            log.debug("Cosmetic-Filters file with id: \(id) deserialized successfully")
-            completion.fill(())
+    private func setJSONFile(into engine: AdblockRustEngine, data: Data, id: String) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            CosmeticFiltersResourceDownloader.queue.async {
+                engine.set(json: data)
+                continuation.resume()
+            }
         }
-        
-        return completion
     }
 }
 

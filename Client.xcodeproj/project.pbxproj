@@ -1046,6 +1046,7 @@
 		CA2202B027194D26002D3582 /* InterstitialPageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2202AF27194D26002D3582 /* InterstitialPageHandler.swift */; };
 		CA2202B227199123002D3582 /* DarkWarning.svg in Resources */ = {isa = PBXBuildFile; fileRef = CA2202B127199123002D3582 /* DarkWarning.svg */; };
 		CA2202B4271993BD002D3582 /* CertificateError.css in Resources */ = {isa = PBXBuildFile; fileRef = CA2202B3271993BD002D3582 /* CertificateError.css */; };
+		CA220B4D27D921C400AB67CA /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA220B4C27D921C400AB67CA /* AsyncAwait.swift */; };
 		CA225DF22795CECE0024C104 /* MainFrame.js in Resources */ = {isa = PBXBuildFile; fileRef = CA225DF12795CECE0024C104 /* MainFrame.js */; };
 		CA225DF32795D0600024C104 /* __firefox__.js in Resources */ = {isa = PBXBuildFile; fileRef = F9E0F3BE25787E2C003A6A30 /* __firefox__.js */; };
 		CA225DF62795D1A80024C104 /* MainFrameAtDocumentStartSandboxed.js in Resources */ = {isa = PBXBuildFile; fileRef = CA225DF42795D1A70024C104 /* MainFrameAtDocumentStartSandboxed.js */; };
@@ -2995,6 +2996,7 @@
 		CA2202AF27194D26002D3582 /* InterstitialPageHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterstitialPageHandler.swift; sourceTree = "<group>"; };
 		CA2202B127199123002D3582 /* DarkWarning.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = DarkWarning.svg; sourceTree = "<group>"; };
 		CA2202B3271993BD002D3582 /* CertificateError.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = CertificateError.css; sourceTree = "<group>"; };
+		CA220B4C27D921C400AB67CA /* AsyncAwait.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncAwait.swift; sourceTree = "<group>"; };
 		CA225DEF2795CDFD0024C104 /* __firefox__.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = __firefox__.js; sourceTree = "<group>"; };
 		CA225DF12795CECE0024C104 /* MainFrame.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = MainFrame.js; sourceTree = "<group>"; };
 		CA225DF42795D1A70024C104 /* MainFrameAtDocumentStartSandboxed.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = MainFrameAtDocumentStartSandboxed.js; sourceTree = "<group>"; };
@@ -4792,6 +4794,7 @@
 				592F521D2217327B0078395E /* HttpCookieExtension.swift */,
 				5D8AE6AE230C76B60096C845 /* AppearanceExtensions.swift */,
 				2727369A24A65F650096DCB9 /* UIActionExtensions.swift */,
+				CA220B4C27D921C400AB67CA /* AsyncAwait.swift */,
 			);
 			indentWidth = 4;
 			path = Extensions;
@@ -8672,6 +8675,7 @@
 				A9072B801D07B34100459960 /* NoImageModeHelper.swift in Sources */,
 				4422D4EB21BFFB7600BF1855 /* filename.cc in Sources */,
 				2726636924944BFA0056CFE1 /* BraveNewsOptInView.swift in Sources */,
+				CA220B4D27D921C400AB67CA /* AsyncAwait.swift in Sources */,
 				CA439A5925E6F29D00FE9150 /* VideoPlayerInfoBar.swift in Sources */,
 				277E94F225F834240001926E /* VPNMenuButton.swift in Sources */,
 				2755EABD255323C60033C43F /* PublisherInfoExtensions.swift in Sources */,
