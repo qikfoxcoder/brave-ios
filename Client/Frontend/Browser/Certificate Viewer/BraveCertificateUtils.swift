@@ -67,7 +67,7 @@ extension BraveCertificateUtils {
       
       // Invalid encoding for the root arcs 0 and 1.
       // Invalid encoding the root arc is limited to 0, 1, and 2.
-      if (list[0] < 0 || list[0] > 2) || (list[0] <= 1 && list[1] > 39) {
+      if (list[0] > 2) || (list[0] <= 1 && list[1] > 39) {
         throw OIDConversionError.invalidRootArc
       }
       
