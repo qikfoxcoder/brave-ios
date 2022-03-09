@@ -1897,6 +1897,14 @@ extension Strings {
     }
 }
 
+// MARK: - SSL Certificate Viewer
+
+extension Strings {
+    public struct CertificateViewer {
+        
+    }
+}
+
 // MARK: - Shortcuts
 
 extension Strings {
