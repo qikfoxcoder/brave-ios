@@ -7,6 +7,8 @@ import Foundation
 import BraveCore
 import SwiftUI
 import BraveUI
+import Shared
+import BraveShared
 
 private struct CertificateTitleView: View {
     let isRootCertificate: Bool
@@ -42,7 +44,7 @@ private struct CertificateKeyValueView: View, Hashable {
     }
 }
 
-private struct CertificateSectionView<ContentView>: View where ContentView: View {
+private struct CertificateSectionView<ContentView>: View where ContentView: View & Hashable {
     let title: String
     let values: [ContentView]
     
@@ -50,8 +52,8 @@ private struct CertificateSectionView<ContentView>: View where ContentView: View
         Section(header: Text(title)
                     .font(.caption)) {
             
-            ForEach(values.indices, id: \.self) {
-                values[$0].listRowBackground(Color(.secondaryBraveGroupedBackground))
+            ForEach(values, id: \.self) {
+                $0.listRowBackground(Color(.secondaryBraveGroupedBackground))
             }
         }
     }
@@ -76,134 +78,72 @@ private struct CertificateView: View {
     @ViewBuilder
     private var content: some View {
         // Subject name
-        CertificateSectionView(title: "Subject Name", values: subjectNameViews())
+        CertificateSectionView(title: Strings.CertificateViewer.subjectNameTitle, values: subjectNameViews())
         
         // Issuer name
-        CertificateSectionView(title: "Issuer Name",
+        CertificateSectionView(title: Strings.CertificateViewer.issuerNameTitle,
                                values: issuerNameViews())
-        
+
         // Common info
-        CertificateSectionView(title: "Common Info",
+        CertificateSectionView(title: Strings.CertificateViewer.commonInfoTitle,
                                values: [
           // Serial number
-          CertificateKeyValueView(title: "Serial Number",
-                                    value: formattedSerialNumber()),
+          CertificateKeyValueView(title: Strings.CertificateViewer.serialNumberTitle,
+                                    value: formattedSerialNumber),
                                 
           // Version
-          CertificateKeyValueView(title: "Version",
+          CertificateKeyValueView(title: Strings.CertificateViewer.versionNumberTitle,
                                     value: "\(model.version)"),
                                 
           // Signature Algorithm
-          CertificateKeyValueView(title: "Signature Algorithm",
-              value: "\(model.signature.digest) with \(model.signature.algorithm) Encryption (\(model.signature.absoluteObjectIdentifier.isEmpty ? BraveCertificateUtils.oid_to_absolute_oid(oid: model.signature.objectIdentifier) : model.signature.absoluteObjectIdentifier))"),
+          
+          CertificateKeyValueView(title: Strings.CertificateViewer.signatureAlgorithmTitle,
+              value: "\(signatureAlgorithmDescription) (\(model.signature.absoluteObjectIdentifier.isEmpty ? BraveCertificateUtils.oid_to_absolute_oid(oid: model.signature.objectIdentifier) : model.signature.absoluteObjectIdentifier))"),
           
           // Signature Algorithm Parameters
           signatureParametersView()
         ])
         
         // Validity info
-        CertificateSectionView(title: "Validity Dates",
+        CertificateSectionView(title: Strings.CertificateViewer.validityDatesTitle,
                                values: [
           // Not Valid Before
-          CertificateKeyValueView(title: "Not Valid Before",
+          CertificateKeyValueView(title: Strings.CertificateViewer.notValidBeforeTitle,
                                     value: BraveCertificateUtils.formatDate(model.notValidBefore)),
         
           // Not Valid After
-          CertificateKeyValueView(title: "Not Valid After",
+          CertificateKeyValueView(title: Strings.CertificateViewer.notValidAfterTitle,
                                     value: BraveCertificateUtils.formatDate(model.notValidAfter))
         ])
         
         // Public Key Info
-        CertificateSectionView(title: "Public Key info",
+        CertificateSectionView(title: Strings.CertificateViewer.publicKeyInfoTitle,
                                values: publicKeyInfoViews())
         
         // Signature
-        CertificateSectionView(title: "Signature",
+        CertificateSectionView(title: Strings.CertificateViewer.signatureTitle,
                                values: [
-          CertificateKeyValueView(title: "Signature",
+          CertificateKeyValueView(title: Strings.CertificateViewer.signatureTitle,
                                     value: formattedSignature())
         ])
         
         // Fingerprints
-        CertificateSectionView(title: "Fingerprints",
+        CertificateSectionView(title: Strings.CertificateViewer.fingerPrintsTitle,
                                values: fingerprintViews())
     }
 }
 
 extension CertificateView {
-    private func subjectNameViews() -> [CertificateKeyValueView] {
-        let subjectName = model.subjectName
+    private var signatureAlgorithmDescription: String {
+        // TODO: Export Enum for this.
+        if model.signature.algorithm == "ECDSA" {
+            return String(format: Strings.CertificateViewer.signatureAlgorithmSignatureDescription, model.signature.algorithm, model.signature.digest)
+        }
         
-        // Ordered mapping
-        var mapping = [
-            KeyValue(key: "Country or Region", value: subjectName.countryOrRegion),
-            KeyValue(key: "State/Province", value: subjectName.stateOrProvince),
-            KeyValue(key: "Locality", value: subjectName.locality)
-        ]
-        
-        mapping.append(contentsOf: subjectName.organization.map {
-            KeyValue(key: "Organization", value: "\($0)")
-        })
-        
-        mapping.append(contentsOf: subjectName.organizationalUnit.map {
-            KeyValue(key: "Organizational Unit", value: "\($0)")
-        })
-        
-        mapping.append(KeyValue(key: "Common Name", value: subjectName.commonName))
-        
-        mapping.append(contentsOf: subjectName.streetAddress.map {
-            KeyValue(key: "Street Address", value: "\($0)")
-        })
-        
-        mapping.append(contentsOf: subjectName.domainComponent.map {
-            KeyValue(key: "Domain Component", value: "\($0)")
-        })
-
-        mapping.append(KeyValue(key: "User ID", value: subjectName.userId))
-        
-        return mapping.compactMap({
-            $0.value.isEmpty ? nil : CertificateKeyValueView(title: $0.key,
-                                                               value: $0.value)
-        })
+        return String(format: Strings.CertificateViewer.signatureAlgorithmEncryptionDescription, model.signature.digest, model.signature.algorithm)
     }
     
-    private func issuerNameViews() -> [CertificateKeyValueView] {
-        let issuerName = model.issuerName
-        
-        // Ordered mapping
-        var mapping = [
-            KeyValue(key: "Country or Region", value: issuerName.countryOrRegion),
-            KeyValue(key: "State/Province", value: issuerName.stateOrProvince),
-            KeyValue(key: "Locality", value: issuerName.locality)
-        ]
-        
-        mapping.append(contentsOf: issuerName.organization.map {
-            KeyValue(key: "Organization", value: "\($0)")
-        })
-        
-        mapping.append(contentsOf: issuerName.organizationalUnit.map {
-            KeyValue(key: "Organizational Unit", value: "\($0)")
-        })
-        
-        mapping.append(KeyValue(key: "Common Name", value: issuerName.commonName))
-        
-        mapping.append(contentsOf: issuerName.streetAddress.map {
-            KeyValue(key: "Street Address", value: "\($0)")
-        })
-        
-        mapping.append(contentsOf: issuerName.domainComponent.map {
-            KeyValue(key: "Domain Component", value: "\($0)")
-        })
-
-        mapping.append(KeyValue(key: "User ID", value: issuerName.userId))
-        
-        return mapping.compactMap({
-            $0.value.isEmpty ? nil : CertificateKeyValueView(title: $0.key,
-                                                               value: $0.value)
-        })
-    }
-    
-    private func formattedSerialNumber() -> String {
+    private var formattedSerialNumber: String {
         let serialNumber = model.serialNumber
         if Int64(serialNumber) != nil || UInt64(serialNumber) != nil {
             return "\(serialNumber)"
@@ -211,10 +151,52 @@ extension CertificateView {
         return BraveCertificateUtils.formatHex(model.serialNumber)
     }
     
+    private func rdnsSequenceViews(rdns: BraveCertificateRDNSequence) -> [CertificateKeyValueView] {
+        // Ordered mapping
+        var mapping = [
+            KeyValue(key: Strings.CertificateViewer.countryOrRegionTitle, value: rdns.countryOrRegion),
+            KeyValue(key: Strings.CertificateViewer.stateOrProvinceTitle, value: rdns.stateOrProvince),
+            KeyValue(key: Strings.CertificateViewer.localityTitle, value: rdns.locality)
+        ]
+        
+        mapping.append(contentsOf: rdns.organization.map {
+            KeyValue(key: Strings.CertificateViewer.organizationTitle, value: $0)
+        })
+        
+        mapping.append(contentsOf: rdns.organizationalUnit.map {
+            KeyValue(key: Strings.CertificateViewer.organizationalUnitTitle, value: $0)
+        })
+        
+        mapping.append(KeyValue(key: Strings.CertificateViewer.commonNameTitle, value: rdns.commonName))
+        
+        mapping.append(contentsOf: rdns.streetAddress.map {
+            KeyValue(key: Strings.CertificateViewer.streetAddressTitle, value: $0)
+        })
+        
+        mapping.append(contentsOf: rdns.domainComponent.map {
+            KeyValue(key: Strings.CertificateViewer.domainComponentTitle, value: $0)
+        })
+
+        mapping.append(KeyValue(key: Strings.CertificateViewer.userIDTitle, value: rdns.userId))
+        
+        return mapping.compactMap({
+            $0.value.isEmpty ? nil : CertificateKeyValueView(title: $0.key,
+                                                               value: $0.value)
+        })
+    }
+    
+    private func subjectNameViews() -> [CertificateKeyValueView] {
+        rdnsSequenceViews(rdns: model.subjectName)
+    }
+    
+    private func issuerNameViews() -> [CertificateKeyValueView] {
+        rdnsSequenceViews(rdns: model.issuerName)
+    }
+    
     private func signatureParametersView() -> CertificateKeyValueView {
         let signature = model.signature
-        let parameters = signature.parameters.isEmpty ? "None" : BraveCertificateUtils.formatHex(signature.parameters)
-        return CertificateKeyValueView(title: "Parameters",
+        let parameters = signature.parameters.isEmpty ? Strings.CertificateViewer.noneTitle : BraveCertificateUtils.formatHex(signature.parameters)
+        return CertificateKeyValueView(title: Strings.CertificateViewer.parametersTitle,
                                          value: parameters)
     }
     
@@ -227,7 +209,7 @@ extension CertificateView {
         }
         
         if !algorithm.isEmpty {
-            algorithm += " Encryption "
+            algorithm += " \(Strings.CertificateViewer.encryptionTitle) "
             if publicKeyInfo.absoluteObjectIdentifier.isEmpty {
                 algorithm += " (\(BraveCertificateUtils.oid_to_absolute_oid(oid: publicKeyInfo.objectIdentifier)))"
             } else {
@@ -235,45 +217,43 @@ extension CertificateView {
             }
         }
         
-        let parameters = publicKeyInfo.parameters.isEmpty ? "None" : "\(publicKeyInfo.parameters.count / 2) bytes : \(BraveCertificateUtils.formatHex(publicKeyInfo.parameters))"
+        let parameters = publicKeyInfo.parameters.isEmpty ? Strings.CertificateViewer.noneTitle : "\(publicKeyInfo.parameters.count / 2) \(Strings.CertificateViewer.bytesUnitTitle) : \(BraveCertificateUtils.formatHex(publicKeyInfo.parameters))"
         
-        // TODO: Number Formatter
-        let publicKey = "\(publicKeyInfo.keyBytesSize) bytes : \(BraveCertificateUtils.formatHex(publicKeyInfo.keyHexEncoded))"
+        let publicKey = "\(publicKeyInfo.keyBytesSize) \(Strings.CertificateViewer.bytesUnitTitle) : \(BraveCertificateUtils.formatHex(publicKeyInfo.keyHexEncoded))"
         
-        // TODO: Number Formatter
-        let keySizeInBits = "\(publicKeyInfo.keySizeInBits) bits"
+        let keySizeInBits = "\(publicKeyInfo.keySizeInBits) \(Strings.CertificateViewer.bitsUnitTitle)"
         
         var keyUsages = [String]()
         if publicKeyInfo.keyUsage.contains(.ENCRYPT) {
-            keyUsages.append("Encrypt")
+            keyUsages.append(Strings.CertificateViewer.encryptTitle)
         }
         
         if publicKeyInfo.keyUsage.contains(.VERIFY) {
-            keyUsages.append("Verify")
+            keyUsages.append(Strings.CertificateViewer.verifyTitle)
         }
         
         if publicKeyInfo.keyUsage.contains(.WRAP) {
-            keyUsages.append("Wrap")
+            keyUsages.append(Strings.CertificateViewer.wrapTitle)
         }
         
         if publicKeyInfo.keyUsage.contains(.DERIVE) {
-            keyUsages.append("Derive")
+            keyUsages.append(Strings.CertificateViewer.deriveTitle)
         }
         
         if publicKeyInfo.keyUsage.isEmpty || publicKeyInfo.keyUsage == .INVALID || publicKeyInfo.keyUsage.contains(.ANY) {
-            keyUsages.append("Any")
+            keyUsages.append(Strings.CertificateViewer.anyTitle)
         }
         
         let exponent = publicKeyInfo.type == .RSA && publicKeyInfo.exponent != 0 ? "\(publicKeyInfo.exponent)" : ""
         
         // Ordered mapping
         let mapping = [
-            KeyValue(key: "Algorithm", value: algorithm),
-            KeyValue(key: "Parameters", value: parameters),
-            KeyValue(key: "Public Key", value: publicKey),
-            KeyValue(key: "Exponent", value: exponent),
-            KeyValue(key: "Key Size", value: keySizeInBits),
-            KeyValue(key: "Key Usage", value: keyUsages.joined(separator: " "))
+            KeyValue(key: Strings.CertificateViewer.algorithmTitle, value: algorithm),
+            KeyValue(key: Strings.CertificateViewer.parametersTitle, value: parameters),
+            KeyValue(key: Strings.CertificateViewer.publicKeyTitle, value: publicKey),
+            KeyValue(key: Strings.CertificateViewer.exponentTitle, value: exponent),
+            KeyValue(key: Strings.CertificateViewer.keySizeTitle, value: keySizeInBits),
+            KeyValue(key: Strings.CertificateViewer.keyUsageTitle, value: keyUsages.joined(separator: " "))
         ]
         
         return mapping.compactMap({
@@ -284,7 +264,7 @@ extension CertificateView {
     
     private func formattedSignature() -> String {
         let signature = model.signature
-        return "\(signature.bytesSize) bytes : \(BraveCertificateUtils.formatHex(signature.signatureHexEncoded))"
+        return "\(signature.bytesSize) \(Strings.CertificateViewer.bytesUnitTitle) : \(BraveCertificateUtils.formatHex(signature.signatureHexEncoded))"
     }
     
     private func fingerprintViews() -> [CertificateKeyValueView] {
@@ -292,8 +272,8 @@ extension CertificateView {
         let sha1Fingerprint = model.sha1Fingerprint
         
         return [
-            CertificateKeyValueView(title: "SHA-256", value: BraveCertificateUtils.formatHex(sha256Fingerprint.fingerprintHexEncoded)),
-            CertificateKeyValueView(title: "SHA-1", value: BraveCertificateUtils.formatHex(sha1Fingerprint.fingerprintHexEncoded))
+            CertificateKeyValueView(title: Strings.CertificateViewer.sha256Title, value: BraveCertificateUtils.formatHex(sha256Fingerprint.fingerprintHexEncoded)),
+            CertificateKeyValueView(title: Strings.CertificateViewer.sha1Title, value: BraveCertificateUtils.formatHex(sha1Fingerprint.fingerprintHexEncoded))
         ]
     }
     
