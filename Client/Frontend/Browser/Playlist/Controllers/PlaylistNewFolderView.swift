@@ -35,6 +35,15 @@ class PlaylistFolderImageLoader: ObservableObject {
         loadImage(url: favIconUrl, isFavIcon: true)
     }
     
+    func load(domainUrl: URL) {
+        //loadImage(url: domainUrl, isFavIcon: true)
+        
+        let fetcher = FavIconImageRenderer()
+        fetcher.loadIcon(siteURL: domainUrl) { [weak self] image in
+            self?.image = image
+        }
+    }
+    
     private func loadImage(url: URL, isFavIcon: Bool) {
         renderer.loadThumbnail(assetUrl: isFavIcon ? nil : url,
                                favIconUrl: isFavIcon ? url : nil,
