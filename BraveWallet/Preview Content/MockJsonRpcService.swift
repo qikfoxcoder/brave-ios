@@ -12,11 +12,11 @@ import BraveCore
 /// - note: Do not use this directly, use ``NetworkStore.previewStore``
 class MockJsonRpcService: BraveWalletJsonRpcService {
   private var chainId: String = BraveWallet.MainnetChainId
-  private var networks: [BraveWallet.EthereumChain] = [.mainnet, .rinkeby, .ropsten]
+  private var networks: [BraveWallet.NetworkInfo] = [.mainnet, .rinkeby, .ropsten]
   private var networkURL: URL?
   private var observers: NSHashTable<BraveWalletJsonRpcServiceObserver> = .weakObjects()
   
-  func chainId(_ completion: @escaping (String) -> Void) {
+  func chainId(_ coin: BraveWallet.CoinType, completion: @escaping (String) -> Void) {
     completion(chainId)
   }
   
@@ -24,11 +24,11 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
     completion(networks.first(where: { $0.chainId == self.chainId })?.blockExplorerUrls.first ?? "")
   }
   
-  func networkUrl(_ completion: @escaping (String) -> Void) {
+  func networkUrl(_ coin: BraveWallet.CoinType, completion: @escaping (String) -> Void) {
     completion(networkURL?.absoluteString ?? "")
   }
   
-  func network(_ completion: @escaping (BraveWallet.EthereumChain) -> Void) {
+  func network(_ coin: BraveWallet.CoinType, completion: @escaping (BraveWallet.NetworkInfo) -> Void) {
     completion(networks.first(where: { $0.chainId == self.chainId }) ?? .init())
   }
   
@@ -41,7 +41,7 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
     completion("10", .success, "")
   }
   
-  func request(_ jsonPayload: String, autoRetryOnNetworkChange: Bool, completion: @escaping (Int32, String, [String: String]) -> Void) {
+  func request(_ jsonPayload: String, autoRetryOnNetworkChange: Bool, coin: BraveWallet.CoinType, completion: @escaping (Int32, String, [String: String]) -> Void) {
     completion(0, "", [:])
   }
   
@@ -49,15 +49,15 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
     observers.add(observer)
   }
   
-  func pendingChainRequests(_ completion: @escaping ([BraveWallet.EthereumChain]) -> Void) {
+  func pendingChainRequests(_ completion: @escaping ([BraveWallet.NetworkInfo]) -> Void) {
     completion([])
   }
   
-  func allNetworks(_ completion: @escaping ([BraveWallet.EthereumChain]) -> Void) {
+  func allNetworks(_ coin: BraveWallet.CoinType, completion: @escaping ([BraveWallet.NetworkInfo]) -> Void) {
     completion(networks)
   }
   
-  func setNetwork(_ chainId: String, completion: @escaping (Bool) -> Void) {
+  func setNetwork(_ coin: BraveWallet.CoinType, chainId: String, completion: @escaping (Bool) -> Void) {
     self.chainId = chainId
     completion(true)
   }
@@ -95,12 +95,12 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
     }
   }
   
-  func add(_ chain: BraveWallet.EthereumChain, completion: @escaping (String, BraveWallet.ProviderError, String) -> Void) {
+  func addEthereumChain(_ chain: BraveWallet.NetworkInfo, completion: @escaping (String, BraveWallet.ProviderError, String) -> Void) {
     networks.append(chain)
     completion("", .success, "")
   }
   
-  func addEthereumChain(forOrigin chain: BraveWallet.EthereumChain, origin: URL, completion: @escaping (String, BraveWallet.ProviderError, String) -> Void) {
+  func addEthereumChain(forOrigin chain: BraveWallet.NetworkInfo, origin: URL, completion: @escaping (String, BraveWallet.ProviderError, String) -> Void) {
     completion("", .chainDisconnected, "Error Message")
   }
   
@@ -110,7 +110,7 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
   func notifySwitchChainRequestProcessed(_ approved: Bool, origin: URL) {
   }
   
-  func setCustomNetworkForTesting(_ chainId: String, providerUrl: URL) {
+  func setCustomNetworkForTesting(_ chainId: String, coin: BraveWallet.CoinType, providerUrl: URL) {
   }
   
   func solanaBalance(_ pubkey: String, completion: @escaping (UInt64, BraveWallet.SolanaProviderError, String) -> Void) {
@@ -122,8 +122,8 @@ class MockJsonRpcService: BraveWalletJsonRpcService {
   }
 }
 
-extension BraveWallet.EthereumChain {
-  static let mainnet: BraveWallet.EthereumChain = .init(
+extension BraveWallet.NetworkInfo {
+  static let mainnet: BraveWallet.NetworkInfo = .init(
     chainId: BraveWallet.MainnetChainId,
     chainName: "Mainnet",
     blockExplorerUrls: ["https://etherscan.io"],
@@ -132,9 +132,10 @@ extension BraveWallet.EthereumChain {
     symbol: "ETH",
     symbolName: "Ethereum",
     decimals: 18,
-    isEip1559: true
+    coin: .eth,
+    data: .init(ethData: .init(isEip1559: true))
   )
-  static let rinkeby: BraveWallet.EthereumChain = .init(
+  static let rinkeby: BraveWallet.NetworkInfo = .init(
     chainId: BraveWallet.RinkebyChainId,
     chainName: "Rinkeby",
     blockExplorerUrls: ["https://rinkeby.etherscan.io"],
@@ -143,9 +144,10 @@ extension BraveWallet.EthereumChain {
     symbol: "ETH",
     symbolName: "Ethereum",
     decimals: 18,
-    isEip1559: false
+    coin: .eth,
+    data: .init(ethData: .init(isEip1559: true))
   )
-  static let ropsten: BraveWallet.EthereumChain = .init(
+  static let ropsten: BraveWallet.NetworkInfo = .init(
     chainId: BraveWallet.RopstenChainId,
     chainName: "Ropsten",
     blockExplorerUrls: ["https://ropsten.etherscan.io"],
@@ -154,6 +156,7 @@ extension BraveWallet.EthereumChain {
     symbol: "ETH",
     symbolName: "Ethereum",
     decimals: 18,
-    isEip1559: false
+    coin: .eth,
+    data: .init(ethData: .init(isEip1559: true))
   )
 }

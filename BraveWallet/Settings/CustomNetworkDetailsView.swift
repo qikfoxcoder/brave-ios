@@ -181,11 +181,11 @@ class CustomNetworkModel: ObservableObject, Identifiable {
   }
   
   /// Updates the details of this class based on a custom network
-  func populateDetails(from network: BraveWallet.EthereumChain) {
+  func populateDetails(from network: BraveWallet.NetworkInfo) {
     self.isEditMode = true
     
     let chainIdInDecimal: String
-    if let intValue = Int(network.chainId.removingHexPrefix, radix: 16) { // BraveWallet.EthereumChain.chainId should always in hex
+    if let intValue = Int(network.chainId.removingHexPrefix, radix: 16) { // BraveWallet.NetworkInfo.chainId should always in hex
       chainIdInDecimal = "\(intValue)"
     } else {
       chainIdInDecimal = network.chainId
@@ -440,15 +440,18 @@ struct CustomNetworkDetailsView: View {
         return nil
       }
     })
-    let network: BraveWallet.EthereumChain = .init(chainId: chainIdInHex,
-                                                   chainName: model.networkName.input,
-                                                   blockExplorerUrls: blockExplorerUrls,
-                                                   iconUrls: iconUrls,
-                                                   rpcUrls: rpcUrls,
-                                                   symbol: model.networkSymbol.input,
-                                                   symbolName: model.networkSymbol.input,
-                                                   decimals: Int32(model.networkDecimals.input) ?? 18,
-                                                   isEip1559: false)
+    let network: BraveWallet.NetworkInfo = .init(
+      chainId: chainIdInHex,
+      chainName: model.networkName.input,
+      blockExplorerUrls: blockExplorerUrls,
+      iconUrls: iconUrls,
+      rpcUrls: rpcUrls,
+      symbol: model.networkSymbol.input,
+      symbolName: model.networkSymbol.input,
+      decimals: Int32(model.networkDecimals.input) ?? 18,
+      coin: .eth,
+      data: .init(ethData: .init(isEip1559: false))
+    )
     networkStore.addCustomNetwork(network) { accepted, errMsg in
       guard accepted else {
         customNetworkError = .failed(errMsg: errMsg)

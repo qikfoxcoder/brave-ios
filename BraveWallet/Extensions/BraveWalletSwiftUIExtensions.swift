@@ -94,7 +94,7 @@ extension BraveWallet.TransactionInfo {
   }
 }
 
-extension BraveWallet.EthereumChain: Identifiable {
+extension BraveWallet.NetworkInfo: Identifiable {
   public var id: String {
     chainId
   }
@@ -129,7 +129,7 @@ extension BraveWallet.BlockchainToken: Identifiable {
     symbol.lowercased()
   }
   
-  public func contractAddress(in network: BraveWallet.EthereumChain) -> String {
+  public func contractAddress(in network: BraveWallet.NetworkInfo) -> String {
     if network.chainId == BraveWallet.RopstenChainId {
       switch symbol.uppercased() {
       case "ETH": return BraveWallet.ethSwapAddress
