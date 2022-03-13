@@ -125,25 +125,18 @@ class CosmeticFiltersResourceDownloader {
     private func downloadCosmeticSamples(with engine: AdblockRustEngine) async throws {
         try await downloadResources(for: engine, type: .cosmeticSample, queueName: "CSS-Queue")
         log.debug("Downloaded Cosmetic Filters CSS Samples")
-        
-        await MainActor.run {
-            Preferences.Debug.lastCosmeticFiltersCSSUpdate.value = Date()
-        }
+        Preferences.Debug.lastCosmeticFiltersCSSUpdate.value = Date()
     }
     
     private func downloadResourceSamples(with engine: AdblockRustEngine) async throws {
         try await downloadResources(for: engine, type: .resourceSample, queueName: "Scriplets-Queue")
         log.debug("Downloaded Cosmetic Filters Scriptlets Samples")
-        
-        await MainActor.run {
-            Preferences.Debug.lastCosmeticFiltersScripletsUpdate.value = Date()
-        }
+        Preferences.Debug.lastCosmeticFiltersScripletsUpdate.value = Date()
     }
     
     private func downloadResources(for engine: AdblockRustEngine,
                                    type: CosmeticFilterType,
                                    queueName: String) async throws {
-        let queue = DispatchQueue(label: queueName)
         let nm = networkManager
         let folderName = CosmeticFiltersResourceDownloader.folderName
         
@@ -169,19 +162,21 @@ class CosmeticFiltersResourceDownloader {
             
             let etag = fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
             
-            return await withCheckedContinuation { continuation in
-                nm.downloadResource(with: url, resourceType: .cached(etag: etag),
-                                    checkLastServerSideModification: !AppConstants.buildChannel.isPublic,
-                                    customHeaders: headers)
-                    .uponQueue(queue) {
-                        continuation.resume(with: .success(CosmeticFilterNetworkResource(resource: $0,
-                                                                                         fileType: fileType,
-                                                                                         type: type)))
-                    }
+            let resource = try await nm.downloadResource(with: url,
+                                                         resourceType: .cached(etag: etag),
+                                                         checkLastServerSideModification: !AppConstants.buildChannel.isPublic,
+                                                         customHeaders: headers)
+            
+            if resource.data.isEmpty {
+                return nil
             }
+            
+            return CosmeticFilterNetworkResource(resource: resource,
+                                                 fileType: fileType,
+                                                 type: type)
         }
         
-        if await self.writeFilesToDisk(resources: completedDownloads, name: fileName) {
+        if try await self.writeFilesToDisk(resources: completedDownloads, name: fileName) {
             try await self.setUpFiles(into: engine, resources: completedDownloads)
         }
     }

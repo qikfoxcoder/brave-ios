@@ -32,14 +32,17 @@ class AdblockDebugMenuTableViewController: TableViewController {
     private var actionsSection: Section {
         var section = Section(header: .title("Actions"))
         section.rows = [
-            Row(text: "Recompile Content Blockers", selection: { [weak self] in
+            Row(text: "Recompile Content Blockers", selection: {
                 BlocklistName.allLists.forEach { $0.fileVersionPref?.value = nil }
-                ContentBlockerHelper.compileBundledLists().upon { _ in
-                    let alert = UIAlertController(title: nil, message: "Recompiled Blockers", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self?.present(alert, animated: true)
+                Task.detached(priority: .userInitiated) {
+                    _ = await ContentBlockerHelper.compileBundledLists()
+                    DispatchQueue.main.async { [weak self] in
+                        let alert = UIAlertController(title: nil, message: "Recompiled Blockers", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self?.present(alert, animated: true)
+                    }
                 }
-                }, cellClass: ButtonCell.self)
+            }, cellClass: ButtonCell.self)
         ]
         
         return section

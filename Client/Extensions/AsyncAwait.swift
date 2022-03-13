@@ -72,3 +72,27 @@ extension Sequence {
         }
     }
 }
+
+extension Task where Failure == Error {
+    @discardableResult
+    static func retry(
+        priority: TaskPriority? = nil,
+        retryCount: Int = 3,
+        retryDelay: TimeInterval = 1,
+        operation: @Sendable @escaping () async throws -> Success
+    ) -> Task {
+        Task(priority: priority) {
+            for _ in 0..<retryCount {
+                do {
+                    return try await operation()
+                } catch {
+                    try await Task<Never, Never>.sleep(nanoseconds: UInt64(retryDelay) * 1_000_000_000)
+                    continue
+                }
+            }
+
+            try Task<Never, Never>.checkCancellation()
+            return try await operation()
+        }
+    }
+}

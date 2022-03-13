@@ -27,16 +27,66 @@ class NetworkManagerTests: XCTestCase {
         let testResponse = getResponse()
         session.response = testResponse
         session.data = data
-        session.error = error
+        session.error = nil
         
-        manager.dataRequest(with: url) { data, response, error in
+        let exp = XCTestExpectation(description: "testDataRequestUrl")
+        Task.detached(priority: .userInitiated) {
+            let (data, response) = try await self.manager.dataRequest(with: self.url)
             XCTAssertEqual(self.data, data)
             XCTAssertEqual(testResponse, response)
-            XCTAssertEqual(self.error.debugDescription, error.debugDescription)
+            exp.fulfill()
         }
+        
+        wait(for: [exp], timeout: 5)
+        XCTAssert(true)
+    }
+    
+    func testDataRequestUrlWithError() {
+        let testResponse = getResponse()
+        session.response = testResponse
+        session.data = data
+        session.error = error
+        
+        let exp = XCTestExpectation(description: "testDataRequestUrlWithError")
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.dataRequest(with: self.url)
+            } catch {
+                XCTAssertEqual((self.error as NSError).code, (error as NSError).code)
+                XCTAssertEqual((self.error as NSError).domain, (error as NSError).domain)
+                exp.fulfill()
+            }
+        }
+        
+        wait(for: [exp], timeout: 5)
+        XCTAssert(true)
     }
     
     func testDataRequestUrlRequest() {
+        let testResponse = getResponse()
+        session.response = testResponse
+        session.data = data
+        session.error = nil
+        
+        let request = URLRequest(url: url)
+        
+        let exp = XCTestExpectation(description: "testDataRequestUrlRequest")
+        Task.detached(priority: .userInitiated) {
+            do {
+                let (data, response) = try await self.manager.dataRequest(with: request)
+                XCTAssertEqual(self.data, data)
+                XCTAssertEqual(testResponse, response)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
+        
+        wait(for: [exp], timeout: 5)
+        XCTAssert(true)
+    }
+    
+    func testDataRequestUrlRequestWithError() {
         let testResponse = getResponse()
         session.response = testResponse
         session.data = data
@@ -44,11 +94,19 @@ class NetworkManagerTests: XCTestCase {
         
         let request = URLRequest(url: url)
         
-        manager.dataRequest(with: request) { data, response, error in
-            XCTAssertEqual(self.data, data)
-            XCTAssertEqual(testResponse, response)
-            XCTAssertEqual(self.error.debugDescription, error.debugDescription)
+        let exp = XCTestExpectation(description: "testDataRequestUrlRequest")
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.dataRequest(with: request)
+            } catch {
+                XCTAssertEqual((self.error as NSError).code, (error as NSError).code)
+                XCTAssertEqual((self.error as NSError).domain, (error as NSError).domain)
+                exp.fulfill()
+            }
         }
+        
+        wait(for: [exp], timeout: 5)
+        XCTAssert(true)
     }
     
     func testDownloadResource() {
@@ -57,11 +115,18 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        let completion = manager.downloadResource(with: url, resourceType: .regular, retryTimeout: nil)
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.downloadResource(with: self.url,
+                                                            resourceType: .regular,
+                                                            retryTimeout: nil)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
         
-        completion.upon { _ in exp.fulfill() }
-        wait(for: [exp], timeout: 1)
-        
+        wait(for: [exp], timeout: 5)
         XCTAssert(true)
     }
 
@@ -71,13 +136,18 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResourceErrorCode")
-        exp.isInverted = true
+
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.downloadResource(with: self.url,
+                                                            resourceType: .regular,
+                                                            retryTimeout: nil)
+            } catch {
+                exp.fulfill()
+            }
+        }
         
-        let completion = manager.downloadResource(with: url, resourceType: .regular, retryTimeout: nil)
-        completion.upon { _ in exp.fulfill() }
-        
-        wait(for: [exp], timeout: 1)
-        
+        wait(for: [exp], timeout: 5)
         XCTAssert(true)
     }
     
@@ -87,13 +157,20 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResourceEmptyData")
-        exp.isInverted = true
         
-        let completion = manager.downloadResource(with: url, resourceType: .regular, retryTimeout: nil)
-        completion.upon { _ in exp.fulfill() }
+        Task.detached(priority: .userInitiated) {
+            do {
+                let value = try await self.manager.downloadResource(with: self.url,
+                                                                    resourceType: .regular,
+                                                                    retryTimeout: nil)
+                XCTAssert(value.data.isEmpty)
+                exp.fulfill()
+            } catch {
+            
+            }
+        }
         
-        wait(for: [exp], timeout: 1)
-        
+        wait(for: [exp], timeout: 5)
         XCTAssert(true)
     }
     
@@ -103,15 +180,20 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        let completion = manager.downloadResource(with: url, resourceType: .cached(etag: etag),
-                                                  retryTimeout: nil)
+        Task.detached(priority: .userInitiated) {
+            do {
+                let value = try await self.manager.downloadResource(with: self.url,
+                                                                    resourceType: .cached(etag: self.etag),
+                                                                    retryTimeout: nil)
+                XCTAssertEqual(value.etag, self.etag)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
         
-        completion.upon { _ in exp.fulfill() }
-        wait(for: [exp], timeout: 1)
-        
-        XCTAssertEqual(completion.value.etag, etag)
+        wait(for: [exp], timeout: 5)
         XCTAssertNotNil(response.allHeaderFields["Etag"])
-        
         XCTAssert(true)
     }
     
@@ -121,11 +203,18 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        let completion = manager.downloadResource(with: url, resourceType: .cached(etag: nil),
-                                                  retryTimeout: nil)
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.downloadResource(with: self.url,
+                                                            resourceType: .cached(etag: nil),
+                                                            retryTimeout: nil)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
         
-        completion.upon { _ in exp.fulfill() }
-        wait(for: [exp], timeout: 1)
+        wait(for: [exp], timeout: 5)
         
         // Can't really test more using this mock.
         XCTAssert(true)
@@ -138,12 +227,19 @@ class NetworkManagerTests: XCTestCase {
         
         let exp = XCTestExpectation(description: "testDownloadResource")
         exp.isInverted = true
-        let completion = manager.downloadResource(with: url, resourceType: .cached(etag: etag),
-                                                  retryTimeout: nil)
         
-        completion.upon { _ in exp.fulfill() }
-        wait(for: [exp], timeout: 1)
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.downloadResource(with: self.url,
+                                                            resourceType: .cached(etag: self.etag),
+                                                            retryTimeout: nil)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
         
+        wait(for: [exp], timeout: 5)
         XCTAssert(true)
     }
     
@@ -153,17 +249,22 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         session.error = error
 
-        
         let exp = XCTestExpectation(description: "testDownloadResource")
-        let completion = manager.downloadResource(with: url, resourceType: .regular, retryTimeout: 1)
+        
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try await self.manager.downloadResource(with: self.url,
+                                                            resourceType: .regular,
+                                                            retryTimeout: 5)
+                exp.fulfill()
+            } catch {
+                
+            }
+        }
+        
         // Clear session's error before retry attempt
         session.error = nil
-        
-        completion.upon { _ in
-            exp.fulfill()
-        }
         wait(for: [exp], timeout: 2)
-        
         XCTAssert(true)
     }
     

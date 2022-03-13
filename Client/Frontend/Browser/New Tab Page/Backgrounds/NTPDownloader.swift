@@ -449,38 +449,37 @@ class NTPDownloader {
     
     // Downloads the item at the specified url relative to the baseUrl
     private func download(type: ResourceType, path: String?, etag: String?, _ completion: @escaping (Data?, CacheResponse?, Error?) -> Void) {
-        guard var url = type.resourceBaseURL() else {
-            return completion(nil, nil, nil)
-        }
-        
-        if let path = path {
-            url = url.appendingPathComponent(path)
-        }
-        
-        var request = URLRequest(url: url)
-        if let etag = etag {
-            request.setValue(etag, forHTTPHeaderField: "If-None-Match")
-        }
-        
-        URLSession(configuration: .ephemeral).dataRequest(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            
-            if let error = error {
+        Task.detached(priority: .userInitiated) {
+            do {
+                guard var url = type.resourceBaseURL() else {
+                    return completion(nil, nil, nil)
+                }
+                
+                if let path = path {
+                    url = url.appendingPathComponent(path)
+                }
+                
+                var request = URLRequest(url: url)
+                if let etag = etag {
+                    request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+                }
+                
+                let (data, response) = try await NetworkManager(session: URLSession(configuration: .ephemeral)).dataRequest(with: request)
+                
+                guard let response = response as? HTTPURLResponse else {
+                    completion(nil, nil, "Response is not an HTTP Response")
+                    return
+                }
+                
+                if response.statusCode != 304 && (response.statusCode < 200 || response.statusCode > 299) {
+                    completion(nil, nil, "Invalid Response Status Code: \(response.statusCode)")
+                    return
+                }
+                
+                completion(data, self.parseETagResponseInfo(response), nil)
+            } catch {
                 completion(nil, nil, error)
-                return
             }
-            
-            guard let response = response as? HTTPURLResponse else {
-                completion(nil, nil, "Response is not an HTTP Response")
-                return
-            }
-            
-            if response.statusCode != 304 && (response.statusCode < 200 || response.statusCode > 299) {
-                completion(nil, nil, "Invalid Response Status Code: \(response.statusCode)")
-                return
-            }
-            
-            completion(data, self.parseETagResponseInfo(response), nil)
         }
     }
     
