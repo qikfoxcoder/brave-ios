@@ -58,4 +58,8 @@ public class AdblockRustEngine {
     deserializationPending = false
     return status
   }
+    
+  func cssRules(for url: URL) -> String? {
+    String(cString: engine_url_cosmetic_resources(engine, url.absoluteString))
+  }
 }

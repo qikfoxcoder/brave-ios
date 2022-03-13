@@ -1100,6 +1100,7 @@
 		CAC5342927A9B87600013056 /* PlaylistFolderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC5342827A9B87600013056 /* PlaylistFolderController.swift */; };
 		CAD0D5D927C007CC001071AC /* PlaylistEditFolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD0D5D827C007CC001071AC /* PlaylistEditFolderView.swift */; };
 		CAFC6C9027CFE34800F9CACC /* BraveSyncAPIExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E09617F252B63F200F3AFBB /* BraveSyncAPIExtensions.swift */; };
+		CAFC6C9127CFE36C00F9CACC /* LoginInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB2F0CE26D3F92D00C8E576 /* LoginInfoViewController.swift */; };
 		CE7F11941F3CEEC800ABFC0B /* RemoteDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7F115E1F3CCEF900ABFC0B /* RemoteDevices.swift */; };
 		D018F93E1F44A71A0098F8CA /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = D018F93D1F44A7190098F8CA /* Schema.swift */; };
 		D029A04920A62DB0001DB72F /* TemporaryDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D029A04820A62DB0001DB72F /* TemporaryDocument.swift */; };
@@ -3046,6 +3047,7 @@
 		CAC5342227A83DE000013056 /* PlaylistFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistFolder.swift; sourceTree = "<group>"; };
 		CAC5342827A9B87600013056 /* PlaylistFolderController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistFolderController.swift; sourceTree = "<group>"; };
 		CAD0D5D827C007CC001071AC /* PlaylistEditFolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistEditFolderView.swift; sourceTree = "<group>"; };
+		CAFC6C9827D011C200F9CACC /* CosmeticFiltersResourceDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticFiltersResourceDownloader.swift; sourceTree = "<group>"; };
 		CE7F115E1F3CCEF900ABFC0B /* RemoteDevices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RemoteDevices.swift; sourceTree = "<group>"; };
 		D000661320472890009BA6F6 /* __firefox__.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = __firefox__.js; sourceTree = "<group>"; };
 		D018F93D1F44A7190098F8CA /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
@@ -3446,6 +3448,7 @@
 				0A4BEF61221B26610005551A /* LocalAdblockResourceProtocol.swift */,
 				0AEFB8522226D7C5007AF600 /* AdblockResourcesMappings.swift */,
 				0AEFB88622299E6A007AF600 /* AdblockerType.swift */,
+				CAFC6C9827D011C200F9CACC /* CosmeticFiltersResourceDownloader.swift */,
 			);
 			path = WebFilters;
 			sourceTree = "<group>";
@@ -8752,6 +8755,7 @@
 				274398F824E71E9800E79605 /* URLString.swift in Sources */,
 				2FD155BE27B2F87000D383E7 /* PasswordStoreStateObserver.swift in Sources */,
 				D863C8F21F68BFC20058D95F /* GradientProgressBar.swift in Sources */,
+				CAFC6C9927D011C200F9CACC /* CosmeticFiltersResourceDownloader.swift in Sources */,
 				0AF6B1E824A0EDC1005417FC /* InstallVPNViewController.swift in Sources */,
 				E4A961181AC041C40069AD6F /* ReadabilityService.swift in Sources */,
 				0A55E544243744DC0069F06A /* BraveVPN.swift in Sources */,
