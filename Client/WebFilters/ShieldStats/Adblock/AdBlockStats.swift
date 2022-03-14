@@ -66,9 +66,10 @@ class AdBlockStats: LocalAdblockResourceProtocol {
         let datFileUrls = filePaths?.filter { $0.pathExtension == "dat" }
         
         downloadTask?.cancel()
-        downloadTask = Task.detached(priority: .userInitiated) {
+        downloadTask = Task {
             do {
                 try await datFileUrls?.asyncConcurrentForEach {
+                    try Task.checkCancellation()
                     let fileName = $0.deletingPathExtension().lastPathComponent
                     guard let data = fm.contents(atPath: $0.path) else { return }
                     try await self.setDataFile(data: data, id: fileName)
@@ -151,6 +152,13 @@ class AdBlockStats: LocalAdblockResourceProtocol {
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             AdBlockStats.adblockSerialQueue.async {
+                do {
+                    try Task.checkCancellation()
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
                 if engine.set(data: data) {
                     log.debug("Adblock file with id: \(id) deserialized successfully")
                     // Clearing the cache or checked urls.

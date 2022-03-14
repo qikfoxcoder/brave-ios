@@ -190,10 +190,10 @@ extension BrowserViewController {
     }
     
     private func createSearchEngine(_ url: URL, reference: String, icon: UIImage) {
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 let response = try await NetworkManager().downloadResource(with: url)
-                DispatchQueue.main.async { [weak self] in
+                await MainActor.run { [weak self] in
                     guard let openSearchEngine = OpenSearchParser(pluginMode: true).parse(
                             response.data, referenceURL: reference, image: icon, isCustomEngine: true) else {
                         return

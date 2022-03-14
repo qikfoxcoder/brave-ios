@@ -30,7 +30,7 @@ class NetworkManagerTests: XCTestCase {
         session.error = nil
         
         let exp = XCTestExpectation(description: "testDataRequestUrl")
-        Task.detached(priority: .userInitiated) {
+        Task {
             let (data, response) = try await self.manager.dataRequest(with: self.url)
             XCTAssertEqual(self.data, data)
             XCTAssertEqual(testResponse, response)
@@ -48,7 +48,7 @@ class NetworkManagerTests: XCTestCase {
         session.error = error
         
         let exp = XCTestExpectation(description: "testDataRequestUrlWithError")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.dataRequest(with: self.url)
             } catch {
@@ -71,7 +71,7 @@ class NetworkManagerTests: XCTestCase {
         let request = URLRequest(url: url)
         
         let exp = XCTestExpectation(description: "testDataRequestUrlRequest")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 let (data, response) = try await self.manager.dataRequest(with: request)
                 XCTAssertEqual(self.data, data)
@@ -95,7 +95,7 @@ class NetworkManagerTests: XCTestCase {
         let request = URLRequest(url: url)
         
         let exp = XCTestExpectation(description: "testDataRequestUrlRequest")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.dataRequest(with: request)
             } catch {
@@ -115,7 +115,7 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.downloadResource(with: self.url,
                                                             resourceType: .regular,
@@ -137,7 +137,7 @@ class NetworkManagerTests: XCTestCase {
         
         let exp = XCTestExpectation(description: "testDownloadResourceErrorCode")
 
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.downloadResource(with: self.url,
                                                             resourceType: .regular,
@@ -158,7 +158,7 @@ class NetworkManagerTests: XCTestCase {
         
         let exp = XCTestExpectation(description: "testDownloadResourceEmptyData")
         
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 let value = try await self.manager.downloadResource(with: self.url,
                                                                     resourceType: .regular,
@@ -180,7 +180,7 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 let value = try await self.manager.downloadResource(with: self.url,
                                                                     resourceType: .cached(etag: self.etag),
@@ -203,7 +203,7 @@ class NetworkManagerTests: XCTestCase {
         session.response = response
         
         let exp = XCTestExpectation(description: "testDownloadResource")
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.downloadResource(with: self.url,
                                                             resourceType: .cached(etag: nil),
@@ -228,7 +228,7 @@ class NetworkManagerTests: XCTestCase {
         let exp = XCTestExpectation(description: "testDownloadResource")
         exp.isInverted = true
         
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.downloadResource(with: self.url,
                                                             resourceType: .cached(etag: self.etag),
@@ -251,7 +251,7 @@ class NetworkManagerTests: XCTestCase {
 
         let exp = XCTestExpectation(description: "testDownloadResource")
         
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 _ = try await self.manager.downloadResource(with: self.url,
                                                             resourceType: .regular,

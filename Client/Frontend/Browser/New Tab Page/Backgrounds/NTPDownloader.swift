@@ -449,7 +449,7 @@ class NTPDownloader {
     
     // Downloads the item at the specified url relative to the baseUrl
     private func download(type: ResourceType, path: String?, etag: String?, _ completion: @escaping (Data?, CacheResponse?, Error?) -> Void) {
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 guard var url = type.resourceBaseURL() else {
                     return completion(nil, nil, nil)

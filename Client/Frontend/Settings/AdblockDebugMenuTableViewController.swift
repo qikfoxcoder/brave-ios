@@ -34,9 +34,9 @@ class AdblockDebugMenuTableViewController: TableViewController {
         section.rows = [
             Row(text: "Recompile Content Blockers", selection: {
                 BlocklistName.allLists.forEach { $0.fileVersionPref?.value = nil }
-                Task.detached(priority: .userInitiated) {
+                Task {
                     _ = await ContentBlockerHelper.compileBundledLists()
-                    DispatchQueue.main.async { [weak self] in
+                    await MainActor.run { [weak self] in
                         let alert = UIAlertController(title: nil, message: "Recompiled Blockers", preferredStyle: .alert)
                         alert.addAction(UIAlertAction(title: "OK", style: .default))
                         self?.present(alert, animated: true)

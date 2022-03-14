@@ -86,7 +86,7 @@ extension Task where Failure == Error {
                 do {
                     return try await operation()
                 } catch {
-                    try await Task<Never, Never>.sleep(nanoseconds: UInt64(retryDelay) * 1_000_000_000)
+                    try await Task<Never, Never>.sleep(nanoseconds: UInt64(retryDelay) * NSEC_PER_SEC)
                     continue
                 }
             }

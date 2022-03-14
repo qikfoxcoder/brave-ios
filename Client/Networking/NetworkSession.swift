@@ -30,7 +30,7 @@ extension URLSession: NetworkSession {
             return try await withCheckedThrowingContinuation { continuation in
                 self.dataTask(with: url) { data, response, error in
                     if let error = error {
-                        continuation.resume(with: .failure(error))
+                        continuation.resume(throwing: error)
                     } else {
                         continuation.resume(with: .success((data ?? Data(), response ?? self.createResponse(url: url))))
                     }
@@ -46,7 +46,7 @@ extension URLSession: NetworkSession {
             return try await withCheckedThrowingContinuation { continuation in
                 self.dataTask(with: urlRequest) { data, response, error in
                     if let error = error {
-                        continuation.resume(with: .failure(error))
+                        continuation.resume(throwing: error)
                     } else {
                         continuation.resume(with: .success((data ?? Data(), response ?? self.createResponse(url: urlRequest.url))))
                     }

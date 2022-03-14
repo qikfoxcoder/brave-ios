@@ -281,10 +281,10 @@ extension SearchCustomEngineViewController {
         changeAddButton(for: .loading)
         view.endEditing(true)
         
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 let response = try await NetworkManager().downloadResource(with: url)
-                DispatchQueue.main.async { [weak self] in
+                await MainActor.run { [weak self] in
                     guard let self = self else { return }
                     
                     if let openSearchEngine = OpenSearchParser(pluginMode: true).parse(response.data, referenceURL: referenceURL, image: iconImage, isCustomEngine: true) {

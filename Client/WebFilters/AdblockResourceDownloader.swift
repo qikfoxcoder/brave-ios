@@ -87,7 +87,9 @@ class AdblockResourceDownloader {
         // file name of which the file will be saved on disk
         let fileName = type.identifier
         
-        async let completedDownloads = type.associatedFiles.asyncCompactMap { fileType -> AdBlockNetworkResource? in
+        async let completedDownloads = type.associatedFiles.asyncConcurrentCompactMap { [weak self] fileType -> AdBlockNetworkResource? in
+            guard let self = self else { return nil }
+            
             let fileExtension = fileType.rawValue
             let etagExtension = fileExtension + ".etag"
             
@@ -100,11 +102,11 @@ class AdblockResourceDownloader {
             url.appendPathExtension(fileExtension)
             
             var headers = [String: String]()
-            if let servicesKeyValue = Bundle.main.getPlistString(for: servicesKeyName) {
-                headers[servicesKeyHeaderValue] = servicesKeyValue
+            if let servicesKeyValue = Bundle.main.getPlistString(for: self.servicesKeyName) {
+                headers[self.servicesKeyHeaderValue] = servicesKeyValue
             }
             
-            let etag = fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
+            let etag = self.fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
             let resource = try await nm.downloadResource(with: url,
                                                          resourceType: .cached(etag: etag),
                                                          checkLastServerSideModification: !AppConstants.buildChannel.isPublic,

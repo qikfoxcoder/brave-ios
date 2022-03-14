@@ -143,7 +143,9 @@ class CosmeticFiltersResourceDownloader {
         // file name of which the file will be saved on disk
         let fileName = type.identifier
         
-        async let completedDownloads = type.associatedFiles.asyncCompactMap { fileType -> CosmeticFilterNetworkResource? in
+        async let completedDownloads = type.associatedFiles.asyncConcurrentCompactMap { [weak self] fileType -> CosmeticFilterNetworkResource? in
+            guard let self = self else { return nil }
+            
             let fileExtension = fileType.rawValue
             let etagExtension = fileExtension + ".etag"
             
@@ -156,11 +158,11 @@ class CosmeticFiltersResourceDownloader {
             url.appendPathExtension(fileExtension)
             
             var headers = [String: String]()
-            if let servicesKeyValue = Bundle.main.getPlistString(for: servicesKeyName) {
-                headers[servicesKeyHeaderValue] = servicesKeyValue
+            if let servicesKeyValue = Bundle.main.getPlistString(for: self.servicesKeyName) {
+                headers[self.servicesKeyHeaderValue] = servicesKeyValue
             }
             
-            let etag = fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
+            let etag = self.fileFromDocumentsAsString("\(fileName).\(etagExtension)", inFolder: folderName)
             
             let resource = try await nm.downloadResource(with: url,
                                                          resourceType: .cached(etag: etag),
@@ -242,10 +244,17 @@ class CosmeticFiltersResourceDownloader {
     private func setDataFile(into engine: AdblockRustEngine, data: Data, id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             CosmeticFiltersResourceDownloader.queue.async {
+                do {
+                    try Task.checkCancellation()
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
                 if engine.set(data: data) {
                     continuation.resume()
                 } else {
-                    continuation.resume(with: .failure("Failed to deserialize adblock list with id: \(id)"))
+                    continuation.resume(throwing: "Failed to deserialize adblock list with id: \(id)")
                 }
             }
         }
@@ -254,6 +263,13 @@ class CosmeticFiltersResourceDownloader {
     private func setJSONFile(into engine: AdblockRustEngine, data: Data, id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             CosmeticFiltersResourceDownloader.queue.async {
+                do {
+                    try Task.checkCancellation()
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
                 engine.set(json: data)
                 continuation.resume()
             }
