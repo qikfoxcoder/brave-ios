@@ -86,18 +86,20 @@ public class TransactionConfirmationStore: ObservableObject {
          decimals: Int(selectedChain.decimals)
     ) ?? ""
     if !self.state.gasValue.isEmpty {
-      rpcService.balance(transaction.fromAddress, coin: .eth) { [weak self] weiBalance, status, _ in
-        guard let self = self, status == .success else { return }
-        let formatter = WeiFormatter(decimalFormatStyle: .balance)
-        guard let decimalString = formatter.decimalString(
-                for: weiBalance.removingHexPrefix, radix: .hex, decimals: Int(self.selectedChain.decimals)
-              ),
-              let value = BDouble(decimalString), let gasValue = BDouble(self.state.gasValue),
-              value > gasValue else {
-                self.state.isBalanceSufficient = false
-                return
-              }
-        self.state.isBalanceSufficient = true
+      rpcService.chainId(.eth) { [weak self] chainId in
+        self?.rpcService.balance(transaction.fromAddress, coin: .eth, chainId: chainId) { [weak self] weiBalance, status, _ in
+          guard let self = self, status == .success else { return }
+          let formatter = WeiFormatter(decimalFormatStyle: .balance)
+          guard let decimalString = formatter.decimalString(
+            for: weiBalance.removingHexPrefix, radix: .hex, decimals: Int(self.selectedChain.decimals)
+          ),
+                let value = BDouble(decimalString), let gasValue = BDouble(self.state.gasValue),
+                value > gasValue else {
+            self.state.isBalanceSufficient = false
+            return
+          }
+          self.state.isBalanceSufficient = true
+        }
       }
     }
   }

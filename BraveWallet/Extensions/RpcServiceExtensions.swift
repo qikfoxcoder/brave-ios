@@ -34,17 +34,19 @@ extension BraveWalletJsonRpcService {
     }
     network { [self] network in
       if token.symbol == network.symbol {
-        balance(account.address, coin: .eth, completion: convert)
+        balance(account.address, coin: .eth, chainId: network.chainId, completion: convert)
       } else if token.isErc20 {
         erc20TokenBalance(
           token.contractAddress(in: network),
           address: account.address,
+          chainId: network.chainId,
           completion: convert
         )
       } else if token.isErc721 {
         erc721TokenBalance(token.contractAddress,
                            tokenId: token.tokenId,
                            accountAddress: account.address,
+                           chainId: network.chainId,
                            completion: convert)
       } else {
         completion(nil)
